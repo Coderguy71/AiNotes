@@ -11,12 +11,26 @@ interface GenerateNotesResponse {
   error?: string;
 }
 
-const formatLabels: Record<string, string> = {
-  "bullet-points": "bullet points",
-  "paragraph": "a cohesive paragraph",
-  "checklist": "a checklist",
-  "summary": "a summary",
-  "outline": "an outline"
+const formatPrompts: Record<string, string> = {
+  "bullet-points": `Transform the following text into clear, concise bullet points. Each bullet should be a key idea or concept. Use sub-bullets for details. Return ONLY the formatted bullet points.
+
+Input: {{input}}`,
+
+  "paragraph": `Transform the following input into a cohesive, well-organized paragraph. Use clear language and logical flow. Return ONLY the formatted paragraph without extra explanation.
+
+Input: {{input}}`,
+
+  "checklist": `Transform the following input into a practical checklist. Make items actionable and clear. Use checkboxes format. Return ONLY the formatted checklist.
+
+Input: {{input}}`,
+
+  "summary": `Create a concise summary of the following text in 3-5 sentences. Capture the main ideas and key points. Return ONLY the summary without introduction.
+
+Input: {{input}}`,
+
+  "outline": `Create a detailed outline from the following text. Use clear hierarchical structure with main points and sub-points. Return ONLY the formatted outline.
+
+Input: {{input}}`
 };
 
 export async function generateNotes({
@@ -34,16 +48,9 @@ export async function generateNotes({
       };
     }
 
-    const type = formatLabels[format] || format;
-    const prompt = `Transform the following input into {{type}}. Keep the formatting clean and well-organized. Return only the formatted output without any additional explanation.
+    const prompt = formatPrompts[format] || formatPrompts["summary"];
 
-Input: {{input}}
-
-Format as: {{type}}`;
-
-    const filledPrompt = prompt
-      .replace(/\{\{type\}\}/g, type)
-      .replace(/\{\{input\}\}/g, input);
+    const filledPrompt = prompt.replace(/\{\{input\}\}/g, input);
 
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
@@ -54,7 +61,7 @@ Format as: {{type}}`;
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'moonshotai/kimi-k2-instruct-0905',
+          model: 'llama-3.1-70b-versatile',
           messages: [
             {
               role: "user",
