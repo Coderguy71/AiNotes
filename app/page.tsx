@@ -1,86 +1,97 @@
+"use client";
+
+import { useState } from "react";
+import InputCard from "@/components/InputCard";
+import OutputCard from "@/components/OutputCard";
+
 export default function Home() {
+  const [output, setOutput] = useState("");
+  const [format, setFormat] = useState("");
+
+  const handleGenerate = async ({ input, format: selectedFormat }: { input: string; format: string }) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    
+    let generatedOutput = "";
+    
+    switch (selectedFormat) {
+      case "bullet-points":
+        const sentences = input.match(/[^.!?]+[.!?]+/g) || [input];
+        generatedOutput = sentences
+          .map((s) => `• ${s.trim()}`)
+          .join("\n");
+        break;
+      case "paragraph":
+        generatedOutput = `✨ ${input.trim()}\n\nThis beautifully captures your thoughts in a cohesive narrative that flows naturally from beginning to end.`;
+        break;
+      case "checklist":
+        const tasks = input.match(/[^.!?]+[.!?]+/g) || [input];
+        generatedOutput = tasks
+          .map((t) => `☐ ${t.trim()}`)
+          .join("\n");
+        break;
+      case "summary":
+        const words = input.trim().split(/\s+/);
+        const summary = words.slice(0, Math.min(30, words.length)).join(" ");
+        generatedOutput = `📝 Summary:\n\n${summary}${words.length > 30 ? "..." : ""}\n\nKey Takeaway: ${words.slice(0, 10).join(" ")}...`;
+        break;
+      case "outline":
+        const points = input.match(/[^.!?]+[.!?]+/g) || [input];
+        generatedOutput = points
+          .map((p, i) => `${i + 1}. ${p.trim()}`)
+          .join("\n");
+        break;
+      default:
+        generatedOutput = input;
+    }
+    
+    setOutput(generatedOutput);
+    setFormat(selectedFormat);
+  };
+
   return (
-    <div className="min-h-screen px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
-        <header className="mb-12 text-center">
-          <h1 className="mb-4 font-serif text-5xl font-semibold text-charcoal sm:text-6xl">
-            Aesthetic Notes AI
-          </h1>
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-dust-grey/80 border-b border-charcoal/10 shadow-[--shadow-sm]">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[--radius-sm] bg-gradient-to-br from-sage-green to-soft-pink shadow-[--shadow-sm]">
+              <svg className="h-6 w-6 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+            <h1 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">
+              Aesthetic Notes AI
+            </h1>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mb-8 text-center animate-fade-in">
           <p className="text-lg text-charcoal/80">
             Transform your thoughts into beautifully organized aesthetic notes powered by AI
           </p>
-        </header>
+        </div>
 
-        <main className="space-y-8">
-          <section className="rounded-[--radius-default] bg-cream p-8 shadow-[--shadow-default] transition-all duration-[--animate-duration-normal] hover:shadow-[--shadow-md]">
-            <h2 className="mb-4 font-serif text-3xl text-charcoal">
-              Welcome to Your Creative Space
-            </h2>
-            <p className="mb-6 leading-relaxed text-charcoal/90">
-              Experience a new way to capture and organize your ideas with elegant design and intelligent features.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <button className="rounded-[--radius-default] bg-sage-green px-6 py-3 font-medium text-cream transition-all duration-[--animate-duration-fast] hover:scale-105 hover:shadow-[--shadow-sm]">
-                Get Started
-              </button>
-              <button className="rounded-[--radius-default] border-2 border-sage-green px-6 py-3 font-medium text-sage-green transition-all duration-[--animate-duration-fast] hover:bg-sage-green hover:text-cream">
-                Learn More
-              </button>
-            </div>
+        <div className="space-y-8">
+          <section className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <InputCard onGenerate={handleGenerate} />
           </section>
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div className="rounded-[--radius-default] bg-soft-pink/30 p-6 transition-all duration-[--animate-duration-slow] hover:bg-soft-pink/40">
-              <h3 className="mb-3 font-serif text-xl text-charcoal">
-                Elegant Design
-              </h3>
-              <p className="text-charcoal/80">
-                Beautiful, distraction-free interface that inspires creativity
-              </p>
-            </div>
-            <div className="rounded-[--radius-default] bg-sage-green/20 p-6 transition-all duration-[--animate-duration-slow] hover:bg-sage-green/30">
-              <h3 className="mb-3 font-serif text-xl text-charcoal">
-                AI-Powered
-              </h3>
-              <p className="text-charcoal/80">
-                Smart organization and suggestions to enhance your notes
-              </p>
-            </div>
-          </div>
-
-          <section className="rounded-[--radius-lg] bg-terracotta p-8 text-cream shadow-[--shadow-lg]">
-            <h2 className="mb-4 font-serif text-3xl">
-              Brand Colors Showcase
-            </h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-              <div className="space-y-2 text-center">
-                <div className="aspect-square rounded-[--radius-sm] bg-dust-grey shadow-[--shadow-sm]"></div>
-                <p className="text-sm">Dust Grey</p>
-              </div>
-              <div className="space-y-2 text-center">
-                <div className="aspect-square rounded-[--radius-sm] bg-sage-green shadow-[--shadow-sm]"></div>
-                <p className="text-sm">Sage Green</p>
-              </div>
-              <div className="space-y-2 text-center">
-                <div className="aspect-square rounded-[--radius-sm] bg-terracotta shadow-[--shadow-sm]"></div>
-                <p className="text-sm">Terracotta</p>
-              </div>
-              <div className="space-y-2 text-center">
-                <div className="aspect-square rounded-[--radius-sm] bg-cream shadow-[--shadow-sm]"></div>
-                <p className="text-sm text-charcoal">Cream</p>
-              </div>
-              <div className="space-y-2 text-center">
-                <div className="aspect-square rounded-[--radius-sm] bg-soft-pink shadow-[--shadow-sm]"></div>
-                <p className="text-sm">Soft Pink</p>
-              </div>
-            </div>
+          <section className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <OutputCard output={output} format={format} />
           </section>
-        </main>
+        </div>
+      </main>
 
-        <footer className="mt-12 text-center text-sm text-charcoal/60">
-          <p>Built with Next.js, TailwindCSS, and beautiful typography</p>
-        </footer>
-      </div>
+      <footer className="mt-16 border-t border-charcoal/10 py-8">
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
+          <p className="text-sm text-charcoal/60">
+            Built with{" "}
+            <span className="text-soft-pink">♥</span>
+            {" "}using Next.js, TailwindCSS, and beautiful typography
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

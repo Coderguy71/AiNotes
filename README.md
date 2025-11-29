@@ -1,24 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aesthetic Notes AI
+
+Transform your thoughts into beautifully organized aesthetic notes powered by AI.
+
+This is a [Next.js](https://nextjs.org) project built with TailwindCSS v4 and beautiful typography using Playfair Display and Inter fonts.
+
+## Features
+
+- **Beautiful UI Components**: Modular InputCard and OutputCard components with high-end aesthetics
+- **Blurred Header**: Sticky header with backdrop blur effect featuring logo and title
+- **Input Section**: Large rounded textarea with Almond Silk background and format selector dropdown
+- **Generate Button**: Primary Dusty Mauve button with micro-bounce hover states
+- **Output Display**: Elegant card for displaying generated notes with copy, download, and share options
+- **Animations**: Smooth fade-in animations and hover effects throughout
+- **Responsive Design**: Mobile-friendly layout with Tailwind breakpoints
+
+## Design System
+
+### Colors
+- **Dust Grey**: #f5f3f0 (background)
+- **Sage Green**: #a8b5a0 (accents)
+- **Terracotta**: #d97d62 (highlights)
+- **Cream**: #faf8f5 (cards)
+- **Charcoal**: #3e3e3e (text)
+- **Soft Pink**: #e8c5c1 (accents)
+- **Almond Silk**: #f7f1e8 (input backgrounds)
+- **Dusty Mauve**: #b89faa (primary buttons)
+
+### Typography
+- **Headings**: Playfair Display (serif)
+- **Body**: Inter (sans-serif)
+
+## Components
+
+### InputCard
+Located at `/components/InputCard.tsx`
+- Large textarea for user input
+- Format selector dropdown (Bullet Points, Paragraph, Checklist, Summary, Outline)
+- Generate button with loading state
+- Proper TypeScript types and accessibility
+
+### OutputCard
+Located at `/components/OutputCard.tsx`
+- Empty state when no output is available
+- Formatted output display with Almond Silk background
+- Action buttons: Copy to Clipboard, Download, Share
+- Format badge display
+- Smooth animations
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
 
