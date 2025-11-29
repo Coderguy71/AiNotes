@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface OutputCardProps {
   output: string;
@@ -10,6 +10,7 @@ interface OutputCardProps {
 
 export default function OutputCard({ output, format, isLoading }: OutputCardProps) {
   const [copied, setCopied] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const formatOutputAsHtml = (text: string) => {
     const lines = text.split('\n');
@@ -90,18 +91,24 @@ export default function OutputCard({ output, format, isLoading }: OutputCardProp
     }
   };
 
-  const handleDownload = () => {
-    if (!output) return;
+  const handleDownloadPDF = async () => {
+    if (!output || !contentRef.current) return;
     
-    const blob = new Blob([output], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `aesthetic-notes-${format}-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      const html2pdf = (await import("html2pdf.js")).default;
+      const element = contentRef.current;
+      const options = {
+        margin: [0.75, 0.75, 0.75, 0.75] as [number, number, number, number],
+        filename: `aesthetic-notes-${format}-${Date.now()}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const }
+      };
+      
+      await html2pdf().set(options).from(element).save();
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+    }
   };
 
   if (isLoading) {
@@ -172,7 +179,10 @@ export default function OutputCard({ output, format, isLoading }: OutputCardProp
         </span>
       </div>
 
-      <div className="mb-6 rounded-[--radius-default] bg-almond-silk p-6 shadow-[--shadow-sm]">
+      <div 
+        ref={contentRef}
+        className="mb-6 rounded-[--radius-default] bg-almond-silk p-6 shadow-[--shadow-sm]"
+      >
         <div className="max-w-none font-sans text-charcoal/90 leading-relaxed">
           {formatOutputAsHtml(output)}
         </div>
@@ -201,13 +211,13 @@ export default function OutputCard({ output, format, isLoading }: OutputCardProp
         </button>
 
         <button
-          onClick={handleDownload}
+          onClick={handleDownloadPDF}
           className="flex items-center gap-2 rounded-[--radius-default] bg-soft-pink px-6 py-3 font-medium text-charcoal shadow-[--shadow-sm] transition-all duration-[--animate-duration-fast] hover:scale-105 hover:shadow-[--shadow-md] active:scale-95"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
-          Download
+          Download PDF
         </button>
 
         <button
