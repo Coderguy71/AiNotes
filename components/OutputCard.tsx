@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 
 interface OutputCardProps {
   output: string;
@@ -39,73 +40,6 @@ export default function OutputCard({ output, format, isLoading, onFormatChange }
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 3000);
-  };
-
-  const formatOutputAsHtml = (text: string) => {
-    const lines = text.split('\n');
-    
-    return lines.map((line, index) => {
-      if (!line.trim()) {
-        return <br key={index} />;
-      }
-      
-      if (line.match(/^[•●◆▪▸]/)) {
-        return (
-          <div key={index} className="flex gap-3 mb-2">
-            <span className="text-sage-green font-bold">{line.charAt(0)}</span>
-            <span className="flex-1">{line.slice(1).trim()}</span>
-          </div>
-        );
-      }
-      
-      if (line.match(/^[\d]+\./)) {
-        const match = line.match(/^(\d+)\.\s*(.*)$/);
-        if (match) {
-          return (
-            <div key={index} className="flex gap-3 mb-2">
-              <span className="text-terracotta font-semibold">{match[1]}.</span>
-              <span className="flex-1">{match[2]}</span>
-            </div>
-          );
-        }
-      }
-      
-      if (line.match(/^[☐☑✓✔]/)) {
-        const isChecked = line.match(/^[☑✓✔]/);
-        return (
-          <div key={index} className="flex gap-3 mb-2">
-            <span className={isChecked ? "text-sage-green" : "text-charcoal/40"}>{line.charAt(0)}</span>
-            <span className={`flex-1 ${isChecked ? 'line-through opacity-70' : ''}`}>{line.slice(1).trim()}</span>
-          </div>
-        );
-      }
-      
-      if (line.match(/^(#{1,6})\s/)) {
-        const level = line.match(/^(#{1,6})\s/)?.[1].length || 1;
-        const text = line.replace(/^#{1,6}\s/, '');
-        const sizes = ['text-2xl', 'text-xl', 'text-lg', 'text-base', 'text-sm', 'text-sm'];
-        return (
-          <h3 key={index} className={`font-serif font-semibold ${sizes[level - 1]} mt-4 mb-2 text-charcoal`}>
-            {text}
-          </h3>
-        );
-      }
-      
-      if (line.match(/^\*\*(.+)\*\*$/)) {
-        const text = line.replace(/^\*\*|\*\*$/g, '');
-        return (
-          <p key={index} className="font-semibold mb-2">
-            {text}
-          </p>
-        );
-      }
-      
-      return (
-        <p key={index} className="mb-2 leading-relaxed">
-          {line}
-        </p>
-      );
-    });
   };
 
   const handleCopy = async () => {
@@ -358,8 +292,49 @@ export default function OutputCard({ output, format, isLoading, onFormatChange }
             transition={{ delay: 0.1, duration: 0.3 }}
             className="mb-4 sm:mb-6 rounded-[--radius-default] bg-almond-silk p-4 sm:p-6 shadow-[--shadow-sm]"
           >
-            <div className="max-w-none font-sans text-base text-charcoal/90 leading-relaxed">
-              {formatOutputAsHtml(output)}
+            <div className="max-w-none font-sans text-base text-charcoal/90 leading-relaxed prose prose-charcoal">
+              <ReactMarkdown
+                components={{
+                  h1: ({ node, ...props }) => <h1 className="font-serif font-semibold text-2xl mt-4 mb-2 text-charcoal" {...props} />,
+                  h2: ({ node, ...props }) => <h2 className="font-serif font-semibold text-xl mt-4 mb-2 text-charcoal" {...props} />,
+                  h3: ({ node, ...props }) => <h3 className="font-serif font-semibold text-lg mt-4 mb-2 text-charcoal" {...props} />,
+                  h4: ({ node, ...props }) => <h4 className="font-serif font-semibold text-base mt-4 mb-2 text-charcoal" {...props} />,
+                  h5: ({ node, ...props }) => <h5 className="font-serif font-semibold text-sm mt-4 mb-2 text-charcoal" {...props} />,
+                  h6: ({ node, ...props }) => <h6 className="font-serif font-semibold text-sm mt-4 mb-2 text-charcoal" {...props} />,
+                  p: ({ node, ...props }) => <p className="mb-2 leading-relaxed" {...props} />,
+                  ul: ({ node, ...props }) => (
+                    <ul className="space-y-2 mb-4 list-disc marker:text-sage-green pl-6" {...props} />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol className="space-y-2 mb-4 list-decimal marker:text-terracotta marker:font-semibold pl-6" {...props} />
+                  ),
+                  li: ({ node, children, ...props }) => (
+                    <li className="leading-relaxed" {...props}>
+                      {children}
+                    </li>
+                  ),
+                  strong: ({ node, ...props }) => <strong className="font-semibold text-charcoal" {...props} />,
+                  em: ({ node, ...props }) => <em className="italic" {...props} />,
+                  code: ({ node, className, children, ...props }) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    return match ? (
+                      <code className="block bg-charcoal/5 rounded-[--radius-sm] p-4 my-3 text-sm font-mono overflow-x-auto" {...props}>
+                        {children}
+                      </code>
+                    ) : (
+                      <code className="bg-charcoal/5 rounded px-1.5 py-0.5 text-sm font-mono" {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                  pre: ({ node, ...props }) => <pre className="my-3" {...props} />,
+                  blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-sage-green pl-4 italic my-3 text-charcoal/70" {...props} />,
+                  a: ({ node, ...props }) => <a className="text-sage-green hover:text-terracotta underline transition-colors" {...props} />,
+                  hr: ({ node, ...props }) => <hr className="my-4 border-t border-charcoal/20" {...props} />,
+                }}
+              >
+                {output}
+              </ReactMarkdown>
             </div>
           </motion.div>
 
