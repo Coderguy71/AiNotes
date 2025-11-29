@@ -4,9 +4,10 @@ import { useState } from "react";
 
 interface InputCardProps {
   onGenerate: (data: { input: string; format: string }) => Promise<void>;
+  error?: string;
 }
 
-export default function InputCard({ onGenerate }: InputCardProps) {
+export default function InputCard({ onGenerate, error }: InputCardProps) {
   const [input, setInput] = useState("");
   const [format, setFormat] = useState("bullet-points");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -84,6 +85,20 @@ export default function InputCard({ onGenerate }: InputCardProps) {
             "Generate"
           )}
         </button>
+
+        {error && (
+          <div className="mt-4 rounded-[--radius-default] bg-terracotta/10 border-2 border-terracotta/30 p-4 animate-fade-in">
+            <div className="flex items-start gap-3">
+              <svg className="h-5 w-5 text-terracotta flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="font-semibold text-terracotta mb-1">Error</h3>
+                <p className="text-sm text-charcoal/80">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

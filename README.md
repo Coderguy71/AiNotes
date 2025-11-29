@@ -6,11 +6,16 @@ This is a [Next.js](https://nextjs.org) project built with TailwindCSS v4 and be
 
 ## Features
 
+- **AI-Powered Generation**: Transform your thoughts using Groq's Llama3-70B model
 - **Beautiful UI Components**: Modular InputCard and OutputCard components with high-end aesthetics
 - **Blurred Header**: Sticky header with backdrop blur effect featuring logo and title
 - **Input Section**: Large rounded textarea with Almond Silk background and format selector dropdown
-- **Generate Button**: Primary Dusty Mauve button with micro-bounce hover states
-- **Output Display**: Elegant card for displaying generated notes with copy, download, and share options
+- **Generate Button**: Primary Dusty Mauve button with micro-bounce hover states and loading spinner
+- **Output Display**: Elegant card for displaying generated notes with rich text formatting
+- **Loading States**: Beautiful breathing animation with placeholder skeleton during generation
+- **Error Handling**: User-friendly error messages with elegant styling
+- **Rich Text Rendering**: Automatic formatting for bullet points, numbered lists, checklists, and more
+- **Copy, Download & Share**: Export your notes in multiple ways
 - **Animations**: Smooth fade-in animations and hover effects throughout
 - **Responsive Design**: Mobile-friendly layout with Tailwind breakpoints
 
@@ -54,6 +59,19 @@ First, install dependencies:
 ```bash
 npm install
 ```
+
+Then, set up your environment variables. Create a `.env.local` file in the root directory:
+
+```bash
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+To get a Groq API key:
+1. Visit [https://console.groq.com](https://console.groq.com)
+2. Sign up or log in
+3. Navigate to API Keys section
+4. Create a new API key
+5. Copy the key and add it to your `.env.local` file
 
 Then, run the development server:
 

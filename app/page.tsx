@@ -3,49 +3,31 @@
 import { useState } from "react";
 import InputCard from "@/components/InputCard";
 import OutputCard from "@/components/OutputCard";
+import { generateNotes } from "./actions/generateNotes";
 
 export default function Home() {
   const [output, setOutput] = useState("");
   const [format, setFormat] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async ({ input, format: selectedFormat }: { input: string; format: string }) => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setError("");
+    setOutput("");
+    setIsLoading(true);
     
-    let generatedOutput = "";
-    
-    switch (selectedFormat) {
-      case "bullet-points":
-        const sentences = input.match(/[^.!?]+[.!?]+/g) || [input];
-        generatedOutput = sentences
-          .map((s) => `• ${s.trim()}`)
-          .join("\n");
-        break;
-      case "paragraph":
-        generatedOutput = `✨ ${input.trim()}\n\nThis beautifully captures your thoughts in a cohesive narrative that flows naturally from beginning to end.`;
-        break;
-      case "checklist":
-        const tasks = input.match(/[^.!?]+[.!?]+/g) || [input];
-        generatedOutput = tasks
-          .map((t) => `☐ ${t.trim()}`)
-          .join("\n");
-        break;
-      case "summary":
-        const words = input.trim().split(/\s+/);
-        const summary = words.slice(0, Math.min(30, words.length)).join(" ");
-        generatedOutput = `📝 Summary:\n\n${summary}${words.length > 30 ? "..." : ""}\n\nKey Takeaway: ${words.slice(0, 10).join(" ")}...`;
-        break;
-      case "outline":
-        const points = input.match(/[^.!?]+[.!?]+/g) || [input];
-        generatedOutput = points
-          .map((p, i) => `${i + 1}. ${p.trim()}`)
-          .join("\n");
-        break;
-      default:
-        generatedOutput = input;
+    try {
+      const result = await generateNotes({ input, format: selectedFormat });
+      
+      if (result.success && result.output) {
+        setOutput(result.output);
+        setFormat(selectedFormat);
+      } else {
+        setError(result.error || "Failed to generate notes. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
-    
-    setOutput(generatedOutput);
-    setFormat(selectedFormat);
   };
 
   return (
@@ -74,11 +56,11 @@ export default function Home() {
 
         <div className="space-y-8">
           <section className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <InputCard onGenerate={handleGenerate} />
+            <InputCard onGenerate={handleGenerate} error={error} />
           </section>
 
           <section className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <OutputCard output={output} format={format} />
+            <OutputCard output={output} format={format} isLoading={isLoading} />
           </section>
         </div>
       </main>
