@@ -295,27 +295,27 @@ export default function OutputCard({ output, format, isLoading, onFormatChange }
             <div className="max-w-none font-sans text-base text-charcoal/90 leading-relaxed prose prose-charcoal">
               <ReactMarkdown
                 components={{
-                  h1: ({ node, ...props }) => <h1 className="font-serif font-semibold text-2xl mt-4 mb-2 text-charcoal" {...props} />,
-                  h2: ({ node, ...props }) => <h2 className="font-serif font-semibold text-xl mt-4 mb-2 text-charcoal" {...props} />,
-                  h3: ({ node, ...props }) => <h3 className="font-serif font-semibold text-lg mt-4 mb-2 text-charcoal" {...props} />,
-                  h4: ({ node, ...props }) => <h4 className="font-serif font-semibold text-base mt-4 mb-2 text-charcoal" {...props} />,
-                  h5: ({ node, ...props }) => <h5 className="font-serif font-semibold text-sm mt-4 mb-2 text-charcoal" {...props} />,
-                  h6: ({ node, ...props }) => <h6 className="font-serif font-semibold text-sm mt-4 mb-2 text-charcoal" {...props} />,
-                  p: ({ node, ...props }) => <p className="mb-2 leading-relaxed" {...props} />,
-                  ul: ({ node, ...props }) => (
+                  h1: (props) => <h1 className="font-serif font-semibold text-2xl mt-4 mb-2 text-charcoal" {...props} />,
+                  h2: (props) => <h2 className="font-serif font-semibold text-xl mt-4 mb-2 text-charcoal" {...props} />,
+                  h3: (props) => <h3 className="font-serif font-semibold text-lg mt-4 mb-2 text-charcoal" {...props} />,
+                  h4: (props) => <h4 className="font-serif font-semibold text-base mt-4 mb-2 text-charcoal" {...props} />,
+                  h5: (props) => <h5 className="font-serif font-semibold text-sm mt-4 mb-2 text-charcoal" {...props} />,
+                  h6: (props) => <h6 className="font-serif font-semibold text-sm mt-4 mb-2 text-charcoal" {...props} />,
+                  p: (props) => <p className="mb-2 leading-relaxed" {...props} />,
+                  ul: (props) => (
                     <ul className="space-y-2 mb-4 list-disc marker:text-sage-green pl-6" {...props} />
                   ),
-                  ol: ({ node, ...props }) => (
+                  ol: (props) => (
                     <ol className="space-y-2 mb-4 list-decimal marker:text-terracotta marker:font-semibold pl-6" {...props} />
                   ),
-                  li: ({ node, children, ...props }) => (
+                  li: ({ children, ...props }) => (
                     <li className="leading-relaxed" {...props}>
                       {children}
                     </li>
                   ),
-                  strong: ({ node, ...props }) => <strong className="font-semibold text-charcoal" {...props} />,
-                  em: ({ node, ...props }) => <em className="italic" {...props} />,
-                  code: ({ node, className, children, ...props }) => {
+                  strong: (props) => <strong className="font-semibold text-charcoal" {...props} />,
+                  em: (props) => <em className="italic" {...props} />,
+                  code: ({ className, children, ...props }) => {
                     const match = /language-(\w+)/.exec(className || '');
                     return match ? (
                       <code className="block bg-charcoal/5 rounded-[--radius-sm] p-4 my-3 text-sm font-mono overflow-x-auto" {...props}>
@@ -327,10 +327,10 @@ export default function OutputCard({ output, format, isLoading, onFormatChange }
                       </code>
                     );
                   },
-                  pre: ({ node, ...props }) => <pre className="my-3" {...props} />,
-                  blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-sage-green pl-4 italic my-3 text-charcoal/70" {...props} />,
-                  a: ({ node, ...props }) => <a className="text-sage-green hover:text-terracotta underline transition-colors" {...props} />,
-                  hr: ({ node, ...props }) => <hr className="my-4 border-t border-charcoal/20" {...props} />,
+                  pre: (props) => <pre className="my-3" {...props} />,
+                  blockquote: (props) => <blockquote className="border-l-4 border-sage-green pl-4 italic my-3 text-charcoal/70" {...props} />,
+                  a: (props) => <a className="text-sage-green hover:text-terracotta underline transition-colors" {...props} />,
+                  hr: (props) => <hr className="my-4 border-t border-charcoal/20" {...props} />,
                 }}
               >
                 {output}
