@@ -137,9 +137,9 @@ export default function InputCard({ onGenerate, error, format, onFormatChange }:
         <div className="relative">
           <label 
             htmlFor="input-text" 
-            className={`absolute left-4 sm:left-6 transition-all duration-300 pointer-events-none ${
+            className={`absolute left-4 sm:left-6 transition-all duration-300 pointer-events-none z-10 ${
               isFocused || input 
-                ? '-top-2.5 text-xs bg-cream px-2 text-dusty-mauve font-semibold' 
+                ? '-top-2.5 text-xs bg-cream px-2 rounded-sm text-dusty-mauve font-semibold' 
                 : 'top-3 sm:top-4 text-sm text-charcoal/60'
             }`}
           >
