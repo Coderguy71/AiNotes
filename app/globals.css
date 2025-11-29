@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f5f3f0;
+  --foreground: #2c2c2c;
+  
+  --dust-grey: #f5f3f0;
+  --sage-green: #a8b5a0;
+  --terracotta: #d97d62;
+  --cream: #faf8f5;
+  --charcoal: #3e3e3e;
+  --soft-pink: #e8c5c1;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  --color-dust-grey: var(--dust-grey);
+  --color-sage-green: var(--sage-green);
+  --color-terracotta: var(--terracotta);
+  --color-cream: var(--cream);
+  --color-charcoal: var(--charcoal);
+  --color-soft-pink: var(--soft-pink);
+  
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+  
+  --radius-default: 16px;
+  --radius-sm: 8px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-default: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  
+  --animate-duration-fast: 200ms;
+  --animate-duration-normal: 250ms;
+  --animate-duration-slow: 300ms;
+}
+
+body {
+  background: var(--dust-grey);
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(168, 181, 160, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(232, 197, 193, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(217, 125, 98, 0.02) 0%, transparent 50%);
+  color: var(--foreground);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-playfair), Georgia, 'Times New Roman', serif;
+  font-weight: 600;
+}
