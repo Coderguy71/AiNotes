@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Aesthetic Notes AI",
-  description: "Transform your thoughts into beautifully organized aesthetic notes powered by AI",
+  title: "EasyNotesAI",
+  description: "Transform your thoughts into organized notes with ease — powered by AI",
 };
 
 export default function RootLayout({

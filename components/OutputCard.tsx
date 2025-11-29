@@ -99,7 +99,7 @@ export default function OutputCard({ output, format, isLoading }: OutputCardProp
       const element = contentRef.current;
       const options = {
         margin: [0.75, 0.75, 0.75, 0.75] as [number, number, number, number],
-        filename: `aesthetic-notes-${format}-${Date.now()}.pdf`,
+        filename: `easynotes-${format}-${Date.now()}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const }
@@ -134,7 +134,7 @@ export default function OutputCard({ output, format, isLoading }: OutputCardProp
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <span className="text-sm">AI is crafting your aesthetic notes...</span>
+          <span className="text-sm">AI is creating your notes...</span>
         </div>
       </div>
     );
@@ -172,7 +172,7 @@ export default function OutputCard({ output, format, isLoading }: OutputCardProp
     <div className="animate-fade-in rounded-[--radius-lg] bg-cream p-4 sm:p-6 md:p-8 shadow-[--shadow-lg] transition-all duration-[--animate-duration-normal]">
       <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="font-serif text-2xl sm:text-3xl text-charcoal">
-          Your Aesthetic Notes
+          Your Notes
         </h2>
         <span className="rounded-[--radius-sm] bg-sage-green/20 px-3 py-1.5 text-sm font-medium text-sage-green w-fit">
           {format.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())}

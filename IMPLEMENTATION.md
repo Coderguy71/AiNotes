@@ -1,6 +1,6 @@
 # Groq API Implementation Summary
 
-This document describes the implementation of the Groq API integration for the Aesthetic Notes AI application.
+This document describes the implementation of the Groq API integration for the EasyNotesAI application.
 
 ## What Was Implemented
 
@@ -59,7 +59,7 @@ This document describes the implementation of the Groq API integration for the A
 The implementation uses this prompt structure:
 
 ```
-Transform the following input into {{type}}. Keep the formatting clean, aesthetic, and well-organized. Return only the formatted output without any additional explanation.
+Transform the following input into {{type}}. Keep the formatting clean and well-organized. Return only the formatted output without any additional explanation.
 
 Input: {{input}}
 

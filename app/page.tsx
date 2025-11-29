@@ -41,7 +41,7 @@ export default function Home() {
               </svg>
             </div>
             <h1 className="font-serif text-xl font-semibold text-charcoal sm:text-3xl md:text-4xl">
-              Aesthetic Notes AI
+              EasyNotesAI
             </h1>
           </div>
         </div>
@@ -50,7 +50,7 @@ export default function Home() {
       <main className="mx-auto max-w-6xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8 pb-24 sm:pb-12">
         <div className="mb-6 sm:mb-8 text-center animate-fade-in">
           <p className="text-base sm:text-lg text-charcoal/80 px-4">
-            Transform your thoughts into beautifully organized aesthetic notes powered by AI
+            Effortlessly transform your thoughts into organized notes — simple, fast, and AI-powered
           </p>
         </div>
 
