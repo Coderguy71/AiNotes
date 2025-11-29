@@ -92,6 +92,60 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Mobile & Responsive Design
+
+This application has been optimized for mobile devices with the following enhancements:
+
+### Mobile Features
+- **Responsive Textarea**: Intelligent resizing based on screen size (140px on mobile, 240px on desktop)
+- **Sticky Generate Button**: On mobile devices, the Generate button sticks to the bottom of the screen for easy access
+- **Touch-Optimized Targets**: All buttons meet accessibility standards with minimum 48px touch targets
+- **Stacked Layout**: Components automatically stack vertically on small screens
+- **Adaptive Spacing**: Padding and margins adjust based on screen size for optimal use of space
+- **Smooth Animations**: Fade-in animations work consistently across all devices
+
+### Touch Accessibility
+All interactive elements follow WCAG 2.1 guidelines:
+- Minimum touch target size: 48px × 48px
+- Added `touch-manipulation` CSS to prevent tap delays
+- Appropriate spacing between touch targets (12px minimum)
+
+### Groq API Credit
+The footer now displays "Powered by Groq AI with Llama3-70B" to properly credit the AI service provider.
+
+## Known Caveats & Limitations
+
+### Mobile-Specific Behaviors
+1. **Sticky Button Gradient**: The Generate button on mobile has a gradient background to fade smoothly into the page. This gradient may be visible on very short screens (< 400px height).
+
+2. **Textarea Resizing**: While the textarea is resizable on desktop (via `resize-y`), iOS Safari may limit this functionality. The min-height ensures usability regardless.
+
+3. **Bottom Padding**: Mobile layout adds 96px bottom padding (`pb-24`) to accommodate the sticky button. This extra space is only visible on mobile viewports.
+
+4. **PDF Generation on Mobile**: The html2pdf.js library works on mobile browsers, but:
+   - Large notes may cause memory issues on older devices
+   - Some mobile browsers may block automatic downloads
+   - Users may need to allow popups/downloads in browser settings
+
+5. **Viewport Height**: The sticky button positioning works best on standard mobile devices. Folding phones or unusual aspect ratios may require manual testing.
+
+### Browser Compatibility
+- **Chrome/Edge**: Full support for all features
+- **Safari/iOS Safari**: Tested and working, but backdrop-blur may have slight visual differences
+- **Firefox**: Full support
+- **Samsung Internet**: Touch targets work correctly, animations may vary slightly
+
+### Performance Considerations
+- **Animations**: Fade-in animations use `transform` and `opacity` for GPU acceleration
+- **Large Notes**: PDF generation of very long notes (>10,000 words) may be slow on mobile devices
+- **Network**: Groq API calls require active internet connection; no offline mode available
+
+### Accessibility Notes
+- All interactive elements have appropriate labels and ARIA attributes
+- Color contrast meets WCAG AA standards
+- Focus indicators are visible on all interactive elements
+- Touch targets exceed minimum size requirements
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
