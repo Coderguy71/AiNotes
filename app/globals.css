@@ -10,6 +10,8 @@
   --cream: #faf8f5;
   --charcoal: #3e3e3e;
   --soft-pink: #e8c5c1;
+  --almond-silk: #f7f1e8;
+  --dusty-mauve: #b89faa;
 }
 
 @theme inline {
@@ -22,6 +24,8 @@
   --color-cream: var(--cream);
   --color-charcoal: var(--charcoal);
   --color-soft-pink: var(--soft-pink);
+  --color-almond-silk: var(--almond-silk);
+  --color-dusty-mauve: var(--dusty-mauve);
   
   --font-sans: var(--font-inter);
   --font-serif: var(--font-playfair);
@@ -56,4 +60,19 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-playfair), Georgia, 'Times New Roman', serif;
   font-weight: 600;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
 }
