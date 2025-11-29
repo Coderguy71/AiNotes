@@ -20,7 +20,7 @@ Input: {{input}}`,
 
 Input: {{input}}`,
 
-  "checklist": `Transform the following input into a practical checklist. Make items actionable and clear. Use checkboxes format. Return ONLY the formatted checklist.
+  "simplify": `Transform the following input into a much simpler version. Use simple language without losing the main focus of the text Return ONLY the formatted text.
 
 Input: {{input}}`,
 
