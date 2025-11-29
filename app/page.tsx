@@ -73,7 +73,12 @@ export default function Home() {
           </section>
 
           <section ref={outputRef} className="animate-stagger-3" style={{ animationDelay: "0.2s" }}>
-            <OutputCard output={output} format={format} isLoading={isLoading} />
+            <OutputCard 
+              output={output} 
+              format={format} 
+              isLoading={isLoading} 
+              onFormatChange={setFormat}
+            />
           </section>
         </div>
       </main>
