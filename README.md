@@ -1,13 +1,13 @@
-# Aesthetic Notes AI
+# EasyNotesAI
 
-Transform your thoughts into beautifully organized aesthetic notes powered by AI.
+Transform your thoughts into organized notes with ease — powered by AI.
 
 This is a [Next.js](https://nextjs.org) project built with TailwindCSS v4 and beautiful typography using Playfair Display and Inter fonts.
 
 ## Features
 
 - **AI-Powered Generation**: Transform your thoughts using Groq's Llama3-70B model
-- **Beautiful UI Components**: Modular InputCard and OutputCard components with high-end aesthetics
+- **Beautiful UI Components**: Modular InputCard and OutputCard components with elegant design
 - **Blurred Header**: Sticky header with backdrop blur effect featuring logo and title
 - **Input Section**: Large rounded textarea with Almond Silk background and format selector dropdown
 - **Generate Button**: Primary Dusty Mauve button with micro-bounce hover states and loading spinner

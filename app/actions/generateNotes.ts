@@ -35,7 +35,7 @@ export async function generateNotes({
     }
 
     const type = formatLabels[format] || format;
-    const prompt = `Transform the following input into {{type}}. Keep the formatting clean, aesthetic, and well-organized. Return only the formatted output without any additional explanation.
+    const prompt = `Transform the following input into {{type}}. Keep the formatting clean and well-organized. Return only the formatted output without any additional explanation.
 
 Input: {{input}}
 

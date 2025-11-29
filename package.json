@@ -1,6 +1,7 @@
 {
-  "name": "project",
+  "name": "easynotesai",
   "version": "0.1.0",
+  "description": "Transform your thoughts into organized notes with ease — powered by AI",
   "private": true,
   "scripts": {
     "dev": "next dev",
