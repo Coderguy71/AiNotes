@@ -189,7 +189,7 @@ export default function InputCard({ onGenerate, error, format, onFormatChange }:
             >
               <option value="bullet-points">Bullet Points</option>
               <option value="paragraph">Paragraph</option>
-              <option value="checklist">Checklist</option>
+              <option value="simplify">Simplify</option>
               <option value="summary">Summary</option>
               <option value="outline">Outline</option>
             </select>
