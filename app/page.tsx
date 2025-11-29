@@ -1,27 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import InputCard from "@/components/InputCard";
 import OutputCard from "@/components/OutputCard";
 import { generateNotes } from "./actions/generateNotes";
 
 export default function Home() {
   const [output, setOutput] = useState("");
-  const [format, setFormat] = useState("");
+  const [format, setFormat] = useState("bullet-points");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const outputRef = useRef<HTMLElement>(null);
 
-  const handleGenerate = async ({ input, format: selectedFormat }: { input: string; format: string }) => {
+  const handleGenerate = async ({ input }: { input: string }) => {
     setError("");
     setOutput("");
     setIsLoading(true);
     
     try {
-      const result = await generateNotes({ input, format: selectedFormat });
+      const result = await generateNotes({ input, format });
       
       if (result.success && result.output) {
         setOutput(result.output);
-        setFormat(selectedFormat);
+        
+        // Smooth scroll to output with a slight delay for better UX
+        setTimeout(() => {
+          outputRef.current?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }, 300);
       } else {
         setError(result.error || "Failed to generate notes. Please try again.");
       }
@@ -56,10 +64,15 @@ export default function Home() {
 
         <div className="space-y-6 sm:space-y-8">
           <section className="animate-stagger-2" style={{ animationDelay: "0.1s" }}>
-            <InputCard onGenerate={handleGenerate} error={error} />
+            <InputCard 
+              onGenerate={handleGenerate} 
+              error={error}
+              format={format}
+              onFormatChange={setFormat}
+            />
           </section>
 
-          <section className="animate-stagger-3" style={{ animationDelay: "0.2s" }}>
+          <section ref={outputRef} className="animate-stagger-3" style={{ animationDelay: "0.2s" }}>
             <OutputCard output={output} format={format} isLoading={isLoading} />
           </section>
         </div>
