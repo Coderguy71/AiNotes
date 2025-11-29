@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
+import PageTransition from "@/components/PageTransition";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -29,7 +30,16 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${inter.variable} antialiased`}
       >
-        {children}
+        <div className="decorative-blob blob-1" />
+        <div className="decorative-blob blob-2" />
+        <div className="decorative-blob blob-3" />
+        
+        <div className="accent-line" style={{ top: "20%", width: "60%", left: "20%" }} />
+        <div className="accent-line" style={{ top: "60%", width: "50%", right: "10%" }} />
+        
+        <PageTransition>
+          {children}
+        </PageTransition>
       </body>
     </html>
   );
