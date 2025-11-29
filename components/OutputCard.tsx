@@ -5,10 +5,78 @@ import { useState } from "react";
 interface OutputCardProps {
   output: string;
   format: string;
+  isLoading?: boolean;
 }
 
-export default function OutputCard({ output, format }: OutputCardProps) {
+export default function OutputCard({ output, format, isLoading }: OutputCardProps) {
   const [copied, setCopied] = useState(false);
+
+  const formatOutputAsHtml = (text: string) => {
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => {
+      if (!line.trim()) {
+        return <br key={index} />;
+      }
+      
+      if (line.match(/^[•●◆▪▸]/)) {
+        return (
+          <div key={index} className="flex gap-3 mb-2">
+            <span className="text-sage-green font-bold">{line.charAt(0)}</span>
+            <span className="flex-1">{line.slice(1).trim()}</span>
+          </div>
+        );
+      }
+      
+      if (line.match(/^[\d]+\./)) {
+        const match = line.match(/^(\d+)\.\s*(.*)$/);
+        if (match) {
+          return (
+            <div key={index} className="flex gap-3 mb-2">
+              <span className="text-terracotta font-semibold">{match[1]}.</span>
+              <span className="flex-1">{match[2]}</span>
+            </div>
+          );
+        }
+      }
+      
+      if (line.match(/^[☐☑✓✔]/)) {
+        const isChecked = line.match(/^[☑✓✔]/);
+        return (
+          <div key={index} className="flex gap-3 mb-2">
+            <span className={isChecked ? "text-sage-green" : "text-charcoal/40"}>{line.charAt(0)}</span>
+            <span className={`flex-1 ${isChecked ? 'line-through opacity-70' : ''}`}>{line.slice(1).trim()}</span>
+          </div>
+        );
+      }
+      
+      if (line.match(/^(#{1,6})\s/)) {
+        const level = line.match(/^(#{1,6})\s/)?.[1].length || 1;
+        const text = line.replace(/^#{1,6}\s/, '');
+        const sizes = ['text-2xl', 'text-xl', 'text-lg', 'text-base', 'text-sm', 'text-sm'];
+        return (
+          <h3 key={index} className={`font-serif font-semibold ${sizes[level - 1]} mt-4 mb-2 text-charcoal`}>
+            {text}
+          </h3>
+        );
+      }
+      
+      if (line.match(/^\*\*(.+)\*\*$/)) {
+        const text = line.replace(/^\*\*|\*\*$/g, '');
+        return (
+          <p key={index} className="font-semibold mb-2">
+            {text}
+          </p>
+        );
+      }
+      
+      return (
+        <p key={index} className="mb-2 leading-relaxed">
+          {line}
+        </p>
+      );
+    });
+  };
 
   const handleCopy = async () => {
     if (!output) return;
@@ -35,6 +103,35 @@ export default function OutputCard({ output, format }: OutputCardProps) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  if (isLoading) {
+    return (
+      <div className="rounded-[--radius-lg] bg-cream p-8 shadow-[--shadow-lg]">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="font-serif text-3xl text-charcoal">
+            Generating Your Notes
+          </h2>
+          <div className="h-6 w-24 animate-pulse rounded-[--radius-sm] bg-sage-green/20"></div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="h-4 animate-pulse rounded bg-almond-silk" style={{ animationDelay: "0s", animationDuration: "1.5s" }}></div>
+          <div className="h-4 animate-pulse rounded bg-almond-silk" style={{ animationDelay: "0.2s", animationDuration: "1.5s" }}></div>
+          <div className="h-4 w-5/6 animate-pulse rounded bg-almond-silk" style={{ animationDelay: "0.4s", animationDuration: "1.5s" }}></div>
+          <div className="h-4 animate-pulse rounded bg-almond-silk" style={{ animationDelay: "0.6s", animationDuration: "1.5s" }}></div>
+          <div className="h-4 w-4/6 animate-pulse rounded bg-almond-silk" style={{ animationDelay: "0.8s", animationDuration: "1.5s" }}></div>
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-2 text-charcoal/60">
+          <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="text-sm">AI is crafting your aesthetic notes...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!output) {
     return (
@@ -76,8 +173,8 @@ export default function OutputCard({ output, format }: OutputCardProps) {
       </div>
 
       <div className="mb-6 rounded-[--radius-default] bg-almond-silk p-6 shadow-[--shadow-sm]">
-        <div className="prose prose-charcoal max-w-none whitespace-pre-wrap font-sans text-charcoal/90 leading-relaxed">
-          {output}
+        <div className="max-w-none font-sans text-charcoal/90 leading-relaxed">
+          {formatOutputAsHtml(output)}
         </div>
       </div>
 
