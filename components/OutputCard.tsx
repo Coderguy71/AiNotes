@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from 'react-markdown';
+
 
 interface OutputCardProps {
   output: string;
@@ -359,7 +361,7 @@ export default function OutputCard({ output, format, isLoading, onFormatChange }
             className="mb-4 sm:mb-6 rounded-[--radius-default] bg-almond-silk p-4 sm:p-6 shadow-[--shadow-sm]"
           >
             <div className="max-w-none font-sans text-base text-charcoal/90 leading-relaxed">
-              {formatOutputAsHtml(output)}
+            <ReactMarkdown>{output}</ReactMarkdown>
             </div>
           </motion.div>
 
