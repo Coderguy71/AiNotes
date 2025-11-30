@@ -26,6 +26,38 @@ export interface NoteRecord {
 }
 
 /**
+ * FlashcardCard represents a single flashcard with front (question) and back (answer)
+ * 
+ * @property front - Question or prompt on the front of the card
+ * @property back - Answer or explanation on the back of the card
+ */
+export interface FlashcardCard {
+  front: string;
+  back: string;
+}
+
+/**
+ * FlashcardSet represents a collection of flashcards stored in the database
+ * 
+ * @property id - Auto-incremented primary key
+ * @property noteId - Optional reference to the note that generated these flashcards
+ * @property subject - Broad category (e.g., "Mathematics", "Programming")
+ * @property topic - Specific topic within the subject
+ * @property difficulty - Learning level: beginner, intermediate, or advanced
+ * @property createdAt - Creation timestamp (ISO string)
+ * @property cards - Array of flashcard objects (front/back pairs)
+ */
+export interface FlashcardSet {
+  id?: number;
+  noteId?: number;
+  subject: string;
+  topic: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  createdAt: string;
+  cards: FlashcardCard[];
+}
+
+/**
  * Analytics result interface for dashboard consumption
  */
 export interface NotesAnalytics {
@@ -37,18 +69,18 @@ export interface NotesAnalytics {
 }
 
 /**
- * NotesDB is a typed Dexie database for managing notes
+ * NotesDB is a typed Dexie database for managing notes and flashcard sets
  * 
- * Schema:
- * - ++id: Auto-incremented primary key
- * - timestamp: Indexed for time-based queries
- * - subject: Indexed for filtering by category
- * - topic: Indexed for filtering by specific topic
- * - difficulty: Indexed for filtering by learning level
- * - tags: Multi-entry index for tag-based search
+ * Schema v1:
+ * - notes table: ++id, timestamp, subject, topic, difficulty, *tags
+ * 
+ * Schema v2:
+ * - notes table: unchanged (preserves existing data)
+ * - flashcardSets table: ++id, noteId, createdAt
  */
 export class NotesDB extends Dexie {
   notes!: Table<NoteRecord, number>;
+  flashcardSets!: Table<FlashcardSet, number>;
 
   constructor() {
     super('NotesDB');
@@ -59,7 +91,15 @@ export class NotesDB extends Dexie {
       notes: '++id, timestamp, subject, topic, difficulty, *tags',
     });
 
+    // Define schema version 2
+    // Add flashcardSets table while keeping notes table unchanged
+    this.version(2).stores({
+      notes: '++id, timestamp, subject, topic, difficulty, *tags',
+      flashcardSets: '++id, noteId, createdAt',
+    });
+
     this.notes = this.table('notes');
+    this.flashcardSets = this.table('flashcardSets');
   }
 }
 
@@ -539,6 +579,167 @@ export async function clearAllNotes(): Promise<void> {
     console.log('NotesDB: Cleared all notes');
   } catch (error) {
     console.error('NotesDB: Failed to clear all notes:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// Flashcard Set Operations
+// ============================================================================
+
+/**
+ * Save a new flashcard set to the database
+ * 
+ * Usage:
+ * ```typescript
+ * const id = await saveFlashcardSet({
+ *   noteId: 42, // optional
+ *   subject: "Programming",
+ *   topic: "React Hooks",
+ *   difficulty: "intermediate",
+ *   createdAt: new Date().toISOString(),
+ *   cards: [
+ *     { front: "What is useState?", back: "A React Hook for managing state" },
+ *     { front: "What is useEffect?", back: "A Hook for side effects" }
+ *   ]
+ * });
+ * ```
+ * 
+ * @param flashcardSet - FlashcardSet without id (will be auto-generated)
+ * @returns Promise resolving to the new flashcard set's ID, or null during SSR
+ */
+export async function saveFlashcardSet(
+  flashcardSet: Omit<FlashcardSet, 'id'>
+): Promise<number | null> {
+  const db = getDB();
+  if (!db) {
+    console.warn('FlashcardSets: Cannot save during SSR');
+    return null;
+  }
+  
+  try {
+    const id = await db.flashcardSets.add(flashcardSet as FlashcardSet);
+    console.log(`FlashcardSets: Saved flashcard set with ID ${id} (${flashcardSet.cards.length} cards)`);
+    return id;
+  } catch (error) {
+    console.error('FlashcardSets: Failed to save flashcard set:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get a single flashcard set by ID
+ * 
+ * Usage:
+ * ```typescript
+ * const set = await getFlashcardSet(42);
+ * if (set) {
+ *   console.log(`${set.topic}: ${set.cards.length} cards`);
+ * }
+ * ```
+ * 
+ * @param id - Flashcard set ID
+ * @returns Promise resolving to flashcard set or undefined if not found, or null during SSR
+ */
+export async function getFlashcardSet(id: number): Promise<FlashcardSet | undefined | null> {
+  const db = getDB();
+  if (!db) {
+    console.warn('FlashcardSets: Cannot get during SSR');
+    return null;
+  }
+  
+  try {
+    const set = await db.flashcardSets.get(id);
+    if (set) {
+      console.log(`FlashcardSets: Retrieved flashcard set ${id}`);
+    }
+    return set;
+  } catch (error) {
+    console.error(`FlashcardSets: Failed to get flashcard set ${id}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * List flashcard sets sorted by creation date (newest first) with optional pagination
+ * 
+ * Usage:
+ * ```typescript
+ * // Get all flashcard sets
+ * const allSets = await listFlashcardSets();
+ * 
+ * // Get first 10 sets
+ * const recentSets = await listFlashcardSets({ limit: 10 });
+ * 
+ * // Get next page
+ * const nextPage = await listFlashcardSets({ limit: 10, offset: 10 });
+ * 
+ * // Filter by note ID
+ * const noteSets = await listFlashcardSets({ noteId: 42 });
+ * ```
+ * 
+ * @param options - Optional filters and pagination
+ * @returns Promise resolving to array of flashcard sets, or empty array during SSR
+ */
+export async function listFlashcardSets(options?: {
+  noteId?: number;
+  limit?: number;
+  offset?: number;
+}): Promise<FlashcardSet[]> {
+  const db = getDB();
+  if (!db) {
+    console.warn('FlashcardSets: Cannot list during SSR');
+    return [];
+  }
+  
+  try {
+    let query = db.flashcardSets.orderBy('createdAt').reverse();
+    
+    // Apply noteId filter if specified
+    if (options?.noteId !== undefined) {
+      query = query.filter((set) => set.noteId === options.noteId);
+    }
+    
+    // Apply pagination
+    if (options?.offset !== undefined) {
+      query = query.offset(options.offset);
+    }
+    if (options?.limit !== undefined) {
+      query = query.limit(options.limit);
+    }
+    
+    const sets = await query.toArray();
+    console.log(`FlashcardSets: Retrieved ${sets.length} flashcard sets`);
+    return sets;
+  } catch (error) {
+    console.error('FlashcardSets: Failed to list flashcard sets:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a flashcard set by ID
+ * 
+ * Usage:
+ * ```typescript
+ * await deleteFlashcardSet(42);
+ * ```
+ * 
+ * @param id - Flashcard set ID to delete
+ * @returns Promise resolving when deletion is complete, or immediately during SSR
+ */
+export async function deleteFlashcardSet(id: number): Promise<void> {
+  const db = getDB();
+  if (!db) {
+    console.warn('FlashcardSets: Cannot delete during SSR');
+    return;
+  }
+  
+  try {
+    await db.flashcardSets.delete(id);
+    console.log(`FlashcardSets: Deleted flashcard set ${id}`);
+  } catch (error) {
+    console.error(`FlashcardSets: Failed to delete flashcard set ${id}:`, error);
     throw error;
   }
 }
