@@ -123,11 +123,11 @@ export default function Dashboard() {
     .slice(0, 2);
 
   // Chart colors matching brand palette
-  const COLORS = ["#a8b5a0", "#d97d62", "#e8c5c1", "#b89faa", "#f7f1e8", "#3e3e3e"];
+  const COLORS = ["#a8b5a0", "#d97d62", "#e8c5c1", "#a6808c", "#ccb7ae", "#565264"];
   const DIFFICULTY_COLORS = {
     Beginner: "#a8b5a0",
     Intermediate: "#d97d62",
-    Advanced: "#b89faa",
+    Advanced: "#a6808c",
   };
 
   // Get latest 5 notes
@@ -305,13 +305,13 @@ export default function Dashboard() {
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={difficultyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#3e3e3e20" />
-                <XAxis dataKey="name" stroke="#3e3e3e" />
-                <YAxis stroke="#3e3e3e" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#56526420" />
+                <XAxis dataKey="name" stroke="#565264" />
+                <YAxis stroke="#565264" />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#faf8f5",
-                    border: "1px solid #3e3e3e20",
+                    border: "1px solid #56526420",
                     borderRadius: "8px",
                   }}
                 />
