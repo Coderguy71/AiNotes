@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f3f0;
+  --background: #d6cfcb;
   --foreground: #2c2c2c;
   
-  --dust-grey: #f5f3f0;
+  --dust-grey: #d6cfcb;
   --sage-green: #a8b5a0;
   --terracotta: #d97d62;
   --cream: #faf8f5;
-  --charcoal: #3e3e3e;
+  --charcoal: #565264;
+  --dim-grey: #706677;
   --soft-pink: #e8c5c1;
-  --almond-silk: #f7f1e8;
-  --dusty-mauve: #b89faa;
+  --almond-silk: #ccb7ae;
+  --dusty-mauve: #a6808c;
   
   --gradient-primary: linear-gradient(135deg, var(--sage-green) 0%, var(--soft-pink) 100%);
   --gradient-accent: linear-gradient(135deg, var(--terracotta) 0%, var(--dusty-mauve) 100%);
@@ -30,6 +31,7 @@
   --color-terracotta: var(--terracotta);
   --color-cream: var(--cream);
   --color-charcoal: var(--charcoal);
+  --color-dim-grey: var(--dim-grey);
   --color-soft-pink: var(--soft-pink);
   --color-almond-silk: var(--almond-silk);
   --color-dusty-mauve: var(--dusty-mauve);

@@ -448,7 +448,7 @@ export default function OutputCard({ output, format, isLoading, onFormatChange }
                   <div 
                     className="h-2 w-2 rounded-full"
                     style={{
-                      backgroundColor: ['#a8b5a0', '#d97d62', '#e8c5c1', '#b89faa'][Math.floor(Math.random() * 4)]
+                      backgroundColor: ['#a8b5a0', '#d97d62', '#e8c5c1', '#a6808c'][Math.floor(Math.random() * 4)]
                     }}
                   ></div>
                 </div>
