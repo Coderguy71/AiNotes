@@ -3,7 +3,9 @@
 import { useState, useRef } from "react";
 import InputCard from "@/components/InputCard";
 import OutputCard from "@/components/OutputCard";
+import SmartStructureCard from "@/components/SmartStructureCard";
 import { generateNotes } from "./actions/generateNotes";
+import { ClassificationResult } from "@/lib/prompts/classifierPrompt";
 
 export default function Home() {
   const [output, setOutput] = useState("");
@@ -12,16 +14,62 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const outputRef = useRef<HTMLElement>(null);
 
+  // Classification state
+  const [rawInput, setRawInput] = useState("");
+  const [classification, setClassification] = useState<ClassificationResult | null>(null);
+  const [classificationLoading, setClassificationLoading] = useState(false);
+  const [classificationError, setClassificationError] = useState<string | null>(null);
+
+  const classifyNotes = async (rawText: string, transformedText: string) => {
+    setClassificationLoading(true);
+    setClassificationError(null);
+    setClassification(null);
+
+    try {
+      const response = await fetch("/api/classifyNotes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notes: `${rawText}\n\n--- Formatted Output ---\n\n${transformedText}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.classification) {
+        setClassification(data.classification);
+      } else {
+        setClassificationError(data.error || "Failed to classify notes");
+      }
+    } catch (err) {
+      console.error("Classification error:", err);
+      setClassificationError("Failed to classify notes. Please try again.");
+    } finally {
+      setClassificationLoading(false);
+    }
+  };
+
   const handleGenerate = async ({ input }: { input: string }) => {
     setError("");
     setOutput("");
     setIsLoading(true);
+    setRawInput(input);
+    
+    // Reset classification state
+    setClassification(null);
+    setClassificationError(null);
+    setClassificationLoading(false);
     
     try {
       const result = await generateNotes({ input, format });
       
       if (result.success && result.output) {
         setOutput(result.output);
+        
+        // Trigger classification in the background (non-blocking)
+        classifyNotes(input, result.output);
         
         // Smooth scroll to output with a slight delay for better UX
         setTimeout(() => {
@@ -80,6 +128,19 @@ export default function Home() {
               onFormatChange={setFormat}
             />
           </section>
+
+          {/* Smart Structure Card - rendered beneath OutputCard */}
+          {output && (
+            <section className="animate-fade-in">
+              <SmartStructureCard
+                classification={classification}
+                isLoading={classificationLoading}
+                error={classificationError}
+                rawText={rawInput}
+                transformedText={output}
+              />
+            </section>
+          )}
         </div>
       </main>
 
