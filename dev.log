@@ -1,14 +1,16 @@
-npm warn Unknown env config "python". This will stop working in the next major version of npm.
 
-> project@0.1.0 dev
+> easynotesai@0.1.0 dev
 > next dev
 
 [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
    ▲ Next.js 16.0.5 (Turbopack)
    - Local:         http://localhost:3000
-   - Network:       http://10.16.10.13:3000
+   - Network:       http://10.10.3.161:3000
 
  ✓ Starting...
- ✓ Ready in 1379ms
-[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
-[?25h
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+ ✓ Ready in 806ms
