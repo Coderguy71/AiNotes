@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getNotes, deleteNote, NoteRecord } from "@/lib/db";
+import { useRouter } from "next/navigation";
+import { getNotes, deleteNote, saveFlashcardSet, NoteRecord } from "@/lib/db";
 import {
   PieChart,
   Pie,
   Cell,
   ResponsiveContainer,
-  Legend,
   Tooltip,
   BarChart,
   Bar,
@@ -17,11 +17,21 @@ import {
   CartesianGrid,
 } from "recharts";
 
+interface ToastMessage {
+  id: string;
+  message: string;
+  type: "success" | "error";
+  icon: React.ReactNode;
+}
+
 export default function Dashboard() {
+  const router = useRouter();
   const [notes, setNotes] = useState<NoteRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedNoteId, setExpandedNoteId] = useState<number | null>(null);
   const [deletingNoteId, setDeletingNoteId] = useState<number | null>(null);
+  const [generatingFlashcardsForNoteId, setGeneratingFlashcardsForNoteId] = useState<number | null>(null);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   useEffect(() => {
     loadNotes();
@@ -58,6 +68,83 @@ export default function Dashboard() {
 
   const toggleExpanded = (id: number) => {
     setExpandedNoteId(expandedNoteId === id ? null : id);
+  };
+
+  // Toast helper
+  const addToast = (message: string, type: "success" | "error", icon: React.ReactNode) => {
+    const toastId = Date.now().toString();
+    setToasts((prev) => [...prev, { id: toastId, message, type, icon }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== toastId));
+    }, 3000);
+  };
+
+  // Generate flashcards handler
+  const handleGenerateFlashcards = async (note: NoteRecord) => {
+    if (!note.id) return;
+
+    setGeneratingFlashcardsForNoteId(note.id);
+
+    try {
+      // Call the generateFlashcards API with the note's raw text
+      const response = await fetch("/api/generateFlashcards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: note.rawText,
+          numCards: 10,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to generate flashcards");
+      }
+
+      if (!data.cards || data.cards.length === 0) {
+        throw new Error("No flashcards were generated");
+      }
+
+      // Save the flashcard set to the database with note metadata
+      const flashcardSetId = await saveFlashcardSet({
+        noteId: note.id,
+        subject: note.subject,
+        topic: note.topic,
+        difficulty: note.difficulty,
+        createdAt: new Date().toISOString(),
+        cards: data.cards,
+      });
+
+      if (!flashcardSetId) {
+        throw new Error("Failed to save flashcard set");
+      }
+
+      // Show success toast
+      addToast(
+        `Generated ${data.cards.length} flashcards!`,
+        "success",
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      );
+
+      // Navigate to the flashcard viewer
+      router.push(`/flashcards/${flashcardSetId}`);
+    } catch (error) {
+      console.error("Failed to generate flashcards:", error);
+      addToast(
+        error instanceof Error ? error.message : "Failed to generate flashcards",
+        "error",
+        <svg className="h-5 w-5 animate-shake-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    } finally {
+      setGeneratingFlashcardsForNoteId(null);
+    }
   };
 
   // Calculate analytics
@@ -409,6 +496,44 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={() => handleGenerateFlashcards(note)}
+                        disabled={generatingFlashcardsForNoteId === note.id}
+                        className="flex items-center justify-center h-8 w-8 rounded-[--radius-sm] bg-dusty-mauve/10 hover:bg-dusty-mauve/20 text-dusty-mauve transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-dusty-mauve/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Generate flashcards"
+                        title="Generate flashcards"
+                      >
+                        {generatingFlashcardsForNoteId === note.id ? (
+                          <svg
+                            className="h-4 w-4 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        ) : (
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                      <button
                         onClick={() => toggleExpanded(note.id!)}
                         className="flex items-center justify-center h-8 w-8 rounded-[--radius-sm] bg-sage-green/10 hover:bg-sage-green/20 text-sage-green transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-sage-green/50"
                         aria-label={isExpanded ? "Collapse details" : "Expand details"}
@@ -585,7 +710,7 @@ export default function Dashboard() {
                     🔥 Highest Difficulty Subjects:
                   </p>
                   <div className="space-y-2">
-                    {hardestSubjects.map(({ subject, avgDifficulty, total }) => (
+                    {hardestSubjects.map(({ subject, avgDifficulty }) => (
                       <div
                         key={subject}
                         className="flex items-center justify-between p-3 bg-dusty-mauve/10 rounded-[--radius-sm] border border-dusty-mauve/20"
@@ -630,6 +755,23 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+
+      {/* Toast Notifications */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-3">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`flex items-center gap-3 px-5 py-3 rounded-[--radius-default] shadow-[--shadow-lg] animate-toast-slide-in ${
+              toast.type === "success"
+                ? "bg-sage-green text-cream"
+                : "bg-terracotta text-cream"
+            }`}
+          >
+            {toast.icon}
+            <span className="font-medium">{toast.message}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -663,21 +805,29 @@ function Header() {
             </h1>
           </Link>
 
-          <nav className="flex items-center gap-2 sm:gap-4">
+          <nav className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/flashcards"
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-charcoal hover:text-terracotta rounded-[--radius-default] hover:bg-terracotta/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-terracotta/50 min-h-[40px] touch-manipulation"
+            >
+              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span className="hidden sm:inline">Flashcards</span>
+            </Link>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-charcoal hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green/50 rounded-[--radius-sm]"
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-charcoal hover:text-sage-green rounded-[--radius-default] hover:bg-sage-green/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green/50 min-h-[40px] touch-manipulation"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                 />
               </svg>
-              <span className="hidden sm:inline">Back to Home</span>
-              <span className="sm:hidden">Home</span>
+              <span className="hidden sm:inline">Home</span>
             </Link>
           </nav>
         </div>
