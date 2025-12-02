@@ -1,5 +1,28 @@
 'use client';
 
+/**
+ * StudyForgeProvider - React Context Provider for StudyForge State
+ * 
+ * This provider:
+ * - Initializes StudyForge on mount via initStudyForge()
+ * - Subscribes to the event bus for reactive UI updates
+ * - Provides state, loading, error, and refresh functions to all children
+ * - Must be mounted in root layout.tsx to make state available app-wide
+ * 
+ * Usage:
+ * ```tsx
+ * // In layout.tsx
+ * <StudyForgeProvider>
+ *   {children}
+ * </StudyForgeProvider>
+ * 
+ * // In any component
+ * const { state, isLoading, error, refreshState } = useStudyForge();
+ * ```
+ * 
+ * See STUDYFORGE.md > UI Components for full documentation.
+ */
+
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import {
   initStudyForge,

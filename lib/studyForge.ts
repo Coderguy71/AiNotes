@@ -1,5 +1,29 @@
 'use client';
 
+/**
+ * StudyForge Core Engine
+ * 
+ * A comprehensive gamification system for EasyNotesAI that rewards users for studying.
+ * 
+ * Key Features:
+ * - XP economy with multipliers from upgrades and streaks
+ * - Level progression with smooth power curve (100 × level^1.5)
+ * - 9 upgrades with prerequisites and stacking effects
+ * - Daily missions with 6-mission pool rotation
+ * - Daily streak tracking with 2x bonus (Streak Booster upgrade)
+ * - Passive XP generation (up to 24 hours)
+ * - Event-driven architecture for reactive UI
+ * 
+ * For comprehensive documentation, see STUDYFORGE.md:
+ * - XP integration points and amounts
+ * - Upgrade definitions and effects
+ * - Mission pool and seeding logic
+ * - Settings and customization
+ * - Testing guide and troubleshooting
+ * 
+ * @module lib/studyForge
+ */
+
 import {
   getStudyForge,
   saveStudyForge,
@@ -86,6 +110,16 @@ const XP_EXPONENT = 1.5;
 
 /**
  * Upgrade definitions with costs and effects
+ * 
+ * All upgrades are permanent purchases that enhance XP gains or unlock features.
+ * Multipliers stack additively (e.g., 10% + 20% = 30% total bonus).
+ * 
+ * To add a new upgrade:
+ * 1. Add definition to this array
+ * 2. UI will automatically render it in StudyForgeShop
+ * 3. Test purchase logic on /studyforge-test page
+ * 
+ * See STUDYFORGE.md > Upgrades section for detailed documentation.
  */
 export const UPGRADES: UpgradeDefinition[] = [
   {
@@ -157,7 +191,17 @@ export const UPGRADES: UpgradeDefinition[] = [
 
 /**
  * Mission pool for daily mission generation
- * Each day, 3 unique missions are randomly selected
+ * Each day, 3 unique missions are randomly selected from this pool.
+ * 
+ * Missions reset at midnight (local time) and progress is tracked automatically
+ * via awardXP() calls with the corresponding missionId.
+ * 
+ * To add a new mission:
+ * 1. Add template to this array
+ * 2. Call awardXP(baseXP, reason, 'new_mission_id') to track progress
+ * 3. Reward is granted when user clicks "Claim" button
+ * 
+ * See STUDYFORGE.md > Missions section for detailed documentation.
  */
 export const MISSION_POOL: MissionTemplate[] = [
   {
@@ -577,10 +621,31 @@ export async function addPassiveXPSinceLastActive(): Promise<number> {
 /**
  * Award XP with multipliers, level progression, and mission tracking
  * 
+ * This is the primary function for granting XP to users. It automatically:
+ * - Applies multipliers from upgrades and streaks
+ * - Updates daily streak if needed
+ * - Checks for level ups and emits events
+ * - Tracks mission progress (if missionId provided)
+ * - Updates activity log
+ * - Syncs to IndexedDB
+ * 
+ * Usage Example:
+ * ```typescript
+ * // Award XP after user action
+ * await awardXP(15, 'Transform notes', 'create_notes');
+ * ```
+ * 
+ * XP Integration Points (see STUDYFORGE.md for full list):
+ * - Transform notes: 15 XP (app/page.tsx)
+ * - Save note: 50 XP (components/SmartStructureCard.tsx)
+ * - Generate flashcards: 40 XP (app/dashboard/page.tsx)
+ * - Save flashcard set: 25 XP (app/flashcards/[id]/page.tsx)
+ * - Review flashcard: 10 XP (app/flashcards/[id]/page.tsx)
+ * 
  * @param baseXP - Base XP amount before multipliers
- * @param reason - Human-readable reason for XP gain
- * @param missionId - Optional mission ID to increment progress
- * @returns Promise resolving to effective XP awarded
+ * @param reason - Human-readable reason for XP gain (shown in toasts and logs)
+ * @param missionId - Optional mission ID to increment progress (e.g., 'create_notes')
+ * @returns Promise resolving to effective XP awarded (after multipliers)
  */
 export async function awardXP(
   baseXP: number,
