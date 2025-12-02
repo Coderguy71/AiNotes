@@ -68,8 +68,116 @@ export interface NotesAnalytics {
   recentNotes: number; // notes created in last 7 days
 }
 
+// ============================================================================
+// StudyForge Interfaces
+// ============================================================================
+
 /**
- * NotesDB is a typed Dexie database for managing notes and flashcard sets
+ * ActivityLogEntry represents a single event in the StudyForge activity log
+ * 
+ * @property timestamp - ISO string when the event occurred
+ * @property type - Type of activity (xp_earned, level_up, upgrade_purchased, mission_completed)
+ * @property message - Human-readable description
+ * @property xpAmount - XP amount (for xp_earned events)
+ * @property level - Level achieved (for level_up events)
+ */
+export interface ActivityLogEntry {
+  timestamp: string;
+  type: 'xp_earned' | 'level_up' | 'upgrade_purchased' | 'mission_completed';
+  message: string;
+  xpAmount?: number;
+  level?: number;
+}
+
+/**
+ * StudyForgeSettings for user preferences
+ * 
+ * @property theme - Selected theme name (default: 'default')
+ * @property autoCollect - Whether to auto-collect idle XP (default: false)
+ * @property soundEnabled - Whether to enable sound effects (default: true)
+ * @property notificationsEnabled - Whether to show notifications (default: true)
+ */
+export interface StudyForgeSettings {
+  theme: string;
+  autoCollect: boolean;
+  soundEnabled: boolean;
+  notificationsEnabled: boolean;
+}
+
+/**
+ * StudyForgeUpgradeState tracks which upgrades have been purchased
+ * 
+ * Keys are upgrade IDs (e.g., "note_mastery_1", "flashcard_grinder_1")
+ * Values are true if purchased, false otherwise
+ */
+export interface StudyForgeUpgradeState {
+  [upgradeId: string]: boolean;
+}
+
+/**
+ * DailyMission represents a daily task for the user to complete
+ * 
+ * @property id - Unique mission ID (e.g., "create_notes", "generate_flashcards")
+ * @property title - Mission title
+ * @property description - Mission description
+ * @property target - Target value to reach (e.g., 5 notes)
+ * @property progress - Current progress (0 to target)
+ * @property reward - XP reward for completion
+ * @property claimed - Whether the reward has been claimed
+ */
+export interface DailyMission {
+  id: string;
+  title: string;
+  description: string;
+  target: number;
+  progress: number;
+  reward: number;
+  claimed: boolean;
+}
+
+/**
+ * StudyForgeRecord represents the single StudyForge state row in the database
+ * 
+ * @property id - Always 1 (singleton pattern)
+ * @property totalXP - Cumulative XP earned (never decreases)
+ * @property availableXP - XP available to spend on upgrades
+ * @property level - Current level (derived from totalXP)
+ * @property xpForNext - XP required to reach next level
+ * @property xpProgress - Current progress toward next level (0-1)
+ * @property pendingIdleXP - Idle XP accumulated but not yet collected
+ * @property passiveXPPerSec - Passive XP generation rate (per second)
+ * @property lastActiveAt - ISO string of last activity timestamp
+ * @property dailyStreak - Current daily streak count
+ * @property lastStreakDate - ISO date string (YYYY-MM-DD) of last streak day
+ * @property missionsLastSeededAt - ISO date string when missions were last seeded
+ * @property activeMissions - Array of current daily missions
+ * @property ownedThemes - Array of unlocked theme names
+ * @property upgrades - Map of purchased upgrades
+ * @property settings - User preferences
+ * @property activityLog - Recent activity history (max 10 entries)
+ */
+export interface StudyForgeRecord {
+  id?: number;
+  totalXP: number;
+  availableXP: number;
+  level: number;
+  xpForNext: number;
+  xpProgress: number;
+  pendingIdleXP: number;
+  passiveXPPerSec: number;
+  lastActiveAt: string;
+  dailyStreak: number;
+  lastStreakDate: string;
+  missionsLastSeededAt: string;
+  activeMissions: DailyMission[];
+  ownedThemes: string[];
+  upgrades: StudyForgeUpgradeState;
+  settings: StudyForgeSettings;
+  activityLog: ActivityLogEntry[];
+}
+
+/**
+ * NotesDB is a typed Dexie database for managing notes, flashcard sets, and StudyForge state
  * 
  * Schema v1:
  * - notes table: ++id, timestamp, subject, topic, difficulty, *tags
@@ -77,10 +185,16 @@ export interface NotesAnalytics {
  * Schema v2:
  * - notes table: unchanged (preserves existing data)
  * - flashcardSets table: ++id, noteId, createdAt
+ * 
+ * Schema v3:
+ * - notes table: unchanged (preserves existing data)
+ * - flashcardSets table: unchanged (preserves existing data)
+ * - studyForge table: ++id (singleton with id=1)
  */
 export class NotesDB extends Dexie {
   notes!: Table<NoteRecord, number>;
   flashcardSets!: Table<FlashcardSet, number>;
+  studyForge!: Table<StudyForgeRecord, number>;
 
   constructor() {
     super('NotesDB');
@@ -98,8 +212,17 @@ export class NotesDB extends Dexie {
       flashcardSets: '++id, noteId, createdAt',
     });
 
+    // Define schema version 3
+    // Add studyForge table (singleton) while keeping other tables unchanged
+    this.version(3).stores({
+      notes: '++id, timestamp, subject, topic, difficulty, *tags',
+      flashcardSets: '++id, noteId, createdAt',
+      studyForge: '++id',
+    });
+
     this.notes = this.table('notes');
     this.flashcardSets = this.table('flashcardSets');
+    this.studyForge = this.table('studyForge');
   }
 }
 
@@ -740,6 +863,124 @@ export async function deleteFlashcardSet(id: number): Promise<void> {
     console.log(`FlashcardSets: Deleted flashcard set ${id}`);
   } catch (error) {
     console.error(`FlashcardSets: Failed to delete flashcard set ${id}:`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// StudyForge Operations
+// ============================================================================
+
+/**
+ * Get the StudyForge state from the database (singleton pattern)
+ * Always uses id=1 as there's only one StudyForge state per user
+ * 
+ * Usage:
+ * ```typescript
+ * const state = await getStudyForge();
+ * if (state) {
+ *   console.log(`Level ${state.level}, ${state.totalXP} XP`);
+ * }
+ * ```
+ * 
+ * @returns Promise resolving to StudyForge state or undefined if not initialized, or null during SSR
+ */
+export async function getStudyForge(): Promise<StudyForgeRecord | undefined | null> {
+  const db = getDB();
+  if (!db) {
+    console.warn('StudyForge: Cannot get during SSR');
+    return null;
+  }
+  
+  try {
+    const state = await db.studyForge.get(1);
+    if (state) {
+      console.log('StudyForge: Retrieved state from database');
+    }
+    return state;
+  } catch (error) {
+    console.error('StudyForge: Failed to get state:', error);
+    throw error;
+  }
+}
+
+/**
+ * Save or update the StudyForge state in the database
+ * Uses upsert pattern - creates with id=1 if not exists, updates if exists
+ * 
+ * Usage:
+ * ```typescript
+ * await saveStudyForge({
+ *   id: 1,
+ *   totalXP: 1000,
+ *   availableXP: 500,
+ *   level: 5,
+ *   // ... other fields
+ * });
+ * ```
+ * 
+ * @param state - Complete StudyForge state object
+ * @returns Promise resolving when save is complete, or immediately during SSR
+ */
+export async function saveStudyForge(state: StudyForgeRecord): Promise<void> {
+  const db = getDB();
+  if (!db) {
+    console.warn('StudyForge: Cannot save during SSR');
+    return;
+  }
+  
+  try {
+    // Ensure id is always 1 (singleton pattern)
+    const stateWithId = { ...state, id: 1 };
+    await db.studyForge.put(stateWithId);
+    console.log('StudyForge: Saved state to database');
+  } catch (error) {
+    console.error('StudyForge: Failed to save state:', error);
+    throw error;
+  }
+}
+
+/**
+ * Log a StudyForge activity event
+ * Automatically appends to the activity log and keeps only the last 10 entries
+ * 
+ * Usage:
+ * ```typescript
+ * await logStudyEvent({
+ *   timestamp: new Date().toISOString(),
+ *   type: 'xp_earned',
+ *   message: 'Earned 50 XP from creating a note',
+ *   xpAmount: 50
+ * });
+ * ```
+ * 
+ * @param entry - Activity log entry to append
+ * @returns Promise resolving when log is saved, or immediately during SSR
+ */
+export async function logStudyEvent(entry: ActivityLogEntry): Promise<void> {
+  const db = getDB();
+  if (!db) {
+    console.warn('StudyForge: Cannot log event during SSR');
+    return;
+  }
+  
+  try {
+    const state = await db.studyForge.get(1);
+    if (!state) {
+      console.warn('StudyForge: Cannot log event - state not initialized');
+      return;
+    }
+    
+    // Add new entry and keep only last 10
+    const updatedLog = [entry, ...state.activityLog].slice(0, 10);
+    
+    await db.studyForge.update(1, {
+      activityLog: updatedLog,
+    });
+    
+    console.log(`StudyForge: Logged ${entry.type} event`);
+  } catch (error) {
+    console.error('StudyForge: Failed to log event:', error);
     throw error;
   }
 }
