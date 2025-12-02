@@ -1,5 +1,29 @@
 "use client";
 
+/**
+ * SmartStructureCard Component
+ * 
+ * Displays AI classification results (subject, topic, difficulty, tags) for generated notes
+ * and provides functionality to save notes to history with StudyForge XP integration.
+ * 
+ * **XP Integration:**
+ * Awards 50 XP when user clicks "Save to History" button and successfully saves note to IndexedDB.
+ * This contributes to the 'create_notes' mission progress.
+ * 
+ * **Features:**
+ * - Collapsible card with expand/collapse animation
+ * - Loading state with skeleton shimmer
+ * - Error state with retry message
+ * - Color-coded difficulty badges (beginner, intermediate, advanced)
+ * - Subject and topic display
+ * - Tag list with color-coordinated styling
+ * - Save button with loading spinner
+ * - XP badge shows "+50 XP" after successful save
+ * - Toast notifications for success/error
+ * 
+ * See STUDYFORGE.md > XP Integration Points for details on XP awards.
+ */
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClassificationResult } from "@/lib/prompts/classifierPrompt";

@@ -127,6 +127,29 @@ To test the implementation:
 - `/components/OutputCard.tsx` - Added loading state and rich text rendering
 - `/README.md` - Added API key setup instructions
 
+## StudyForge Integration
+
+The app now includes **StudyForge**, a comprehensive gamification system that rewards users for studying. Key features:
+
+- **XP Awards**: Users earn XP for transforming notes, generating flashcards, and reviewing
+- **Level Progression**: Smooth XP curve (100 × level^1.5) for meaningful milestones
+- **Upgrades**: Purchase multipliers, passive XP generation, themes, and features
+- **Daily Missions**: Rotating challenges with bonus rewards
+- **Daily Streaks**: Maintain streaks for 2x XP multiplier
+- **Passive XP**: Generate XP over time (up to 24 hours)
+
+### XP Integration Points
+
+| Action | XP | File |
+|--------|-----|------|
+| Transform notes | 15 XP | `app/page.tsx` |
+| Save note to history | 50 XP | `components/SmartStructureCard.tsx` |
+| Generate flashcard set | 40 XP | `app/dashboard/page.tsx` |
+| Save flashcard set | 25 XP | `app/flashcards/[id]/page.tsx` |
+| Review flashcard | 10 XP | `app/flashcards/[id]/page.tsx` |
+
+For full documentation, see **[STUDYFORGE.md](./STUDYFORGE.md)**.
+
 ## Future Enhancements
 
 Potential improvements that could be made:
@@ -136,3 +159,5 @@ Potential improvements that could be made:
 - Support for multiple AI models
 - Rate limiting and usage tracking
 - Offline mode with cached responses
+- Weekly challenges and seasonal events (StudyForge)
+- Leaderboards and social sharing (StudyForge)

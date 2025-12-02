@@ -51,11 +51,11 @@ export interface FlashcardCarouselProps {
  * FlashcardCarousel Component
  * 
  * A responsive carousel for navigating through multiple flashcards with animations,
- * keyboard shortcuts, and progress tracking.
+ * keyboard shortcuts, progress tracking, and optional mastery controls.
  * 
  * **Features:**
  * - Prev/Next navigation with disabled states at boundaries
- * - Keyboard shortcuts: Arrow Left/Right for navigation
+ * - Keyboard shortcuts: Arrow Left/Right for navigation, K (known), R (review)
  * - Animated card transitions (slide + fade)
  * - Visual progress bar with percentage
  * - "Card X of Y" accessibility label
@@ -64,10 +64,23 @@ export interface FlashcardCarouselProps {
  * - Empty state with custom messaging
  * - Fully responsive (full width mobile, constrained desktop)
  * 
+ * **Mastery Controls** (when `showMasteryControls={true}`):
+ * - "I knew this" button: Awards +10 XP, auto-advances after 1.5s
+ * - "Need review" button: No XP, auto-advances immediately
+ * - FloatingXPIndicator shows "+10 XP" on known cards
+ * - Respects enableAnimations prop for XP animations
+ * - Cards can only be marked once (prevents double XP)
+ * 
  * **Keyboard Shortcuts:**
  * - ← Left Arrow: Previous card
  * - → Right Arrow: Next card
+ * - K: Mark card as known (+10 XP)
+ * - R: Mark card for review (no XP)
  * - Space/Enter: Flip current card (handled by Flashcard component)
+ * 
+ * **XP Integration:**
+ * Used in flashcard viewer (/app/flashcards/[id]/page.tsx) to award 10 XP per card marked as known.
+ * See STUDYFORGE.md > XP Integration Points for details.
  * 
  * **Responsive Design:**
  * - Mobile (<640px): Full width, stacked buttons

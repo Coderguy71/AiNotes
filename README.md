@@ -6,18 +6,36 @@ This is a [Next.js](https://nextjs.org) project built with TailwindCSS v4 and be
 
 ## Features
 
+### Core Features
 - **AI-Powered Generation**: Transform your thoughts using Groq's Llama3-70B model
-- **Beautiful UI Components**: Modular InputCard and OutputCard components with elegant design
-- **Blurred Header**: Sticky header with backdrop blur effect featuring logo and title
-- **Input Section**: Large rounded textarea with Almond Silk background and format selector dropdown
-- **Generate Button**: Primary Dusty Mauve button with micro-bounce hover states and loading spinner
-- **Output Display**: Elegant card for displaying generated notes with rich text formatting
-- **Loading States**: Beautiful breathing animation with placeholder skeleton during generation
-- **Error Handling**: User-friendly error messages with elegant styling
+- **Smart Classification**: Automatic categorization by subject, topic, difficulty, and tags
+- **Note History**: Save and manage your transformed notes in IndexedDB
+- **Flashcard Generation**: Create flashcard sets from your notes with AI
+- **Spaced Repetition**: Review flashcards with mastery controls and progress tracking
+- **StudyForge Gamification**: Earn XP, level up, complete missions, and unlock upgrades
+- **Dashboard Analytics**: Visualize your study progress with charts and insights
+
+### UI/UX Features
+- **Beautiful UI Components**: Modular components with elegant design and smooth animations
 - **Rich Text Rendering**: Automatic formatting for bullet points, numbered lists, checklists, and more
-- **Copy, Download & Share**: Export your notes in multiple ways
-- **Animations**: Smooth fade-in animations and hover effects throughout
-- **Responsive Design**: Mobile-friendly layout with Tailwind breakpoints
+- **Export Options**: Download notes as PDF or copy to clipboard
+- **Flashcard Export**: Export flashcard sets as PDF or CSV
+- **Responsive Design**: Mobile-first layout optimized for all screen sizes
+- **Touch-Optimized**: All buttons meet WCAG 2.1 accessibility standards (48px minimum)
+- **Loading States**: Beautiful breathing animations with placeholder skeletons
+- **Error Handling**: User-friendly error messages with elegant styling
+
+### StudyForge Features
+- **XP System**: Earn XP for transforming notes, generating flashcards, and reviewing
+- **Level Progression**: Unlock higher levels with a smooth XP curve (100 × level^1.5)
+- **Upgrades**: Purchase permanent bonuses with XP (multipliers, passive income, themes)
+- **Daily Missions**: Complete rotating challenges for bonus rewards
+- **Daily Streaks**: Maintain streaks for 2x XP multiplier (with Streak Booster upgrade)
+- **Passive XP**: Generate XP over time with furnace upgrades (up to 24 hours)
+- **Activity Log**: Track your progress with exportable CSV logs
+- **Dark Theme**: Unlock the Mindforge theme pack with XP
+
+📖 **For detailed StudyForge documentation, see [STUDYFORGE.md](./STUDYFORGE.md)**
 
 ## Design System
 
@@ -82,6 +100,77 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+## Navigation
+
+The app features several key pages:
+
+- **Home** (`/`): Transform your notes with AI
+- **Dashboard** (`/dashboard`): View analytics, recent notes, and generate flashcards
+- **Flashcards** (`/flashcards`): Browse and manage your flashcard sets
+- **Flashcard Viewer** (`/flashcards/[id]`): Review flashcards with mastery controls
+- **StudyForge** (`/studyforge`): XP system hub with upgrades, missions, and progress tracking
+- **StudyForge Test** (`/studyforge-test`): Manual testing console for StudyForge features (development)
+
+## StudyForge Integration
+
+StudyForge is initialized automatically via the `StudyForgeProvider` in `app/layout.tsx`:
+
+```tsx
+import { StudyForgeProvider } from '@/components/providers/StudyForgeProvider';
+import XPToastHost from '@/components/studyforge/XPToast';
+import LevelUpModal from '@/components/studyforge/LevelUpModal';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <StudyForgeProvider>
+          {children}
+        </StudyForgeProvider>
+        <XPToastHost />
+        <LevelUpModal />
+      </body>
+    </html>
+  );
+}
+```
+
+### XP Integration Points
+
+StudyForge awards XP at the following points:
+
+| Action | XP | Location |
+|--------|-----|----------|
+| Transform notes | 15 XP | `app/page.tsx` |
+| Save note to history | 50 XP | `components/SmartStructureCard.tsx` |
+| Generate flashcard set | 40 XP | `app/dashboard/page.tsx` |
+| Save flashcard set | 25 XP | `app/flashcards/[id]/page.tsx` |
+| Review flashcard (mark as known) | 10 XP | `app/flashcards/[id]/page.tsx` |
+
+For comprehensive StudyForge documentation, including:
+- XP economy and leveling system
+- Upgrade definitions and effects
+- Mission pool and daily rotation
+- Passive XP and idle collection
+- Settings and customization
+- Developer guide for adding new features
+
+**See [STUDYFORGE.md](./STUDYFORGE.md) for full details.**
+
+## Testing
+
+For manual QA testing of StudyForge features, see **[TESTING.md](./TESTING.md)**. This includes:
+
+- Comprehensive test checklists for all XP integration points
+- Level progression, upgrade, mission, and streak tests
+- UI/UX, accessibility, and performance tests
+- Edge case scenarios and troubleshooting
+- Instructions for resetting state and using the test console
+
+Quick testing pages:
+- **StudyForge Test Console**: `http://localhost:3000/studyforge-test`
+- **StudyForge Hub**: `http://localhost:3000/studyforge`
 
 ## Learn More
 
