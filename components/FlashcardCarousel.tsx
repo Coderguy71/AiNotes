@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Flashcard from "./Flashcard";
+import FloatingXPIndicator from "./FloatingXPIndicator";
 
 /**
  * FlashcardData interface
@@ -26,6 +27,10 @@ export interface FlashcardData {
  * @property showProgress - Optional flag to show/hide progress bar (default: true)
  * @property autoFlipOnNav - Optional flag to auto-flip card back to front when navigating (default: true)
  * @property className - Optional additional CSS classes
+ * @property showMasteryControls - Optional flag to show mastery control buttons (default: false)
+ * @property onMarkKnown - Callback when user marks card as known
+ * @property onMarkReview - Callback when user marks card for review
+ * @property enableAnimations - Whether to enable XP animations (default: true)
  */
 export interface FlashcardCarouselProps {
   cards: FlashcardData[];
@@ -36,6 +41,10 @@ export interface FlashcardCarouselProps {
   showProgress?: boolean;
   autoFlipOnNav?: boolean;
   className?: string;
+  showMasteryControls?: boolean;
+  onMarkKnown?: (cardIndex: number) => void;
+  onMarkReview?: (cardIndex: number) => void;
+  enableAnimations?: boolean;
 }
 
 /**
@@ -121,10 +130,16 @@ export default function FlashcardCarousel({
   showProgress = true,
   autoFlipOnNav = true,
   className = "",
+  showMasteryControls = false,
+  onMarkKnown,
+  onMarkReview,
+  enableAnimations = true,
 }: FlashcardCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0); // 1 for next, -1 for prev
   const [cardKey, setCardKey] = useState(0); // Force re-mount to reset flip state
+  const [showXPIndicator, setShowXPIndicator] = useState(false);
+  const [knownCards, setKnownCards] = useState<Set<number>>(new Set());
 
   const totalCards = cards.length;
   const isFirstCard = currentIndex === 0;
@@ -162,21 +177,58 @@ export default function FlashcardCarousel({
     onCardChange?.(newIndex);
   }, [currentIndex, autoFlipOnNav, onCardChange]);
 
-  // Keyboard navigation
+  // Handle marking card as known
+  const handleMarkKnown = useCallback(() => {
+    if (knownCards.has(currentIndex)) return; // Already marked
+    
+    setKnownCards(prev => new Set(prev).add(currentIndex));
+    setShowXPIndicator(true);
+    onMarkKnown?.(currentIndex);
+    
+    // Auto-advance to next card after short delay
+    setTimeout(() => {
+      if (currentIndex < totalCards - 1) {
+        handleNext();
+      }
+    }, 1500);
+  }, [currentIndex, knownCards, onMarkKnown, totalCards, handleNext]);
+
+  // Handle marking card for review
+  const handleMarkReview = useCallback(() => {
+    onMarkReview?.(currentIndex);
+    
+    // Auto-advance to next card
+    if (currentIndex < totalCards - 1) {
+      handleNext();
+    }
+  }, [currentIndex, onMarkReview, totalCards, handleNext]);
+
+  // Keyboard navigation with mastery controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
       if (e.key === "ArrowLeft" && currentIndex > 0) {
         e.preventDefault();
         handlePrevious();
       } else if (e.key === "ArrowRight" && currentIndex < totalCards - 1) {
         e.preventDefault();
         handleNext();
+      } else if (showMasteryControls && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        handleMarkKnown();
+      } else if (showMasteryControls && (e.key === "r" || e.key === "R")) {
+        e.preventDefault();
+        handleMarkReview();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, totalCards, handleNext, handlePrevious]);
+  }, [currentIndex, totalCards, handleNext, handlePrevious, showMasteryControls, handleMarkKnown, handleMarkReview]);
 
   // Slide variants for card animations
   const slideVariants = {
@@ -316,11 +368,69 @@ export default function FlashcardCarousel({
               className="absolute inset-0"
             >
               <Flashcard front={currentCard.front} back={currentCard.back} />
+              
+              {/* Floating XP Indicator */}
+              {showMasteryControls && (
+                <FloatingXPIndicator
+                  xpAmount={10}
+                  show={showXPIndicator}
+                  onComplete={() => setShowXPIndicator(false)}
+                  enableAnimations={enableAnimations}
+                />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
 
         <div className="h-px bg-gradient-to-r from-transparent via-terracotta/30 to-transparent mb-4 sm:mb-6"></div>
+
+        {/* Mastery Control Buttons */}
+        {showMasteryControls && (
+          <>
+            <div className="mb-6 space-y-3">
+              <h4 className="text-sm font-medium text-charcoal/70 text-center uppercase tracking-wide">
+                How well did you know this?
+              </h4>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleMarkKnown}
+                  disabled={knownCards.has(currentIndex)}
+                  className="group relative flex items-center justify-center gap-2 rounded-[--radius-default] bg-gradient-to-br from-sage-green to-sage-green/80 px-5 sm:px-6 py-4 font-medium text-cream shadow-[--shadow-md] transition-all duration-[--animate-duration-fast] hover:scale-105 hover:shadow-[--shadow-lg] hover:-translate-y-0.5 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sage-green/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0 min-h-[56px] flex-1 touch-manipulation"
+                  aria-label="Mark as known - awards 10 XP"
+                >
+                  <svg className="h-6 w-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-base sm:text-lg">
+                    {knownCards.has(currentIndex) ? "Already Reviewed ✓" : "I knew this"}
+                  </span>
+                  <span className="hidden sm:inline-block ml-2 px-2 py-0.5 bg-cream/20 rounded-[--radius-sm] text-xs font-bold">
+                    +10 XP
+                  </span>
+                  <span className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-focus:opacity-100 pointer-events-none transition-opacity duration-200 bg-charcoal text-cream text-xs px-3 py-1.5 rounded whitespace-nowrap animate-tooltip-in z-10">
+                    Press K
+                  </span>
+                </button>
+
+                <button
+                  onClick={handleMarkReview}
+                  className="group relative flex items-center justify-center gap-2 rounded-[--radius-default] border-2 border-terracotta bg-transparent px-5 sm:px-6 py-4 font-medium text-terracotta transition-all duration-[--animate-duration-fast] hover:bg-terracotta hover:text-cream hover:shadow-[--shadow-md] hover:-translate-y-0.5 active:scale-95 focus:outline-none focus:ring-2 focus:ring-terracotta/50 min-h-[56px] flex-1 touch-manipulation"
+                  aria-label="Mark for review - no XP"
+                >
+                  <svg className="h-6 w-6 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <span className="text-base sm:text-lg">Need review</span>
+                  <span className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-focus:opacity-100 pointer-events-none transition-opacity duration-200 bg-charcoal text-cream text-xs px-3 py-1.5 rounded whitespace-nowrap animate-tooltip-in z-10">
+                    Press R
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-dusty-mauve/30 to-transparent mb-4 sm:mb-6"></div>
+          </>
+        )}
 
         {/* Navigation buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -386,6 +496,18 @@ export default function FlashcardCarousel({
               <kbd className="px-2 py-1 bg-almond-silk rounded text-charcoal/70 font-mono text-xs shadow-sm">Space</kbd>
               <span>Flip</span>
             </span>
+            {showMasteryControls && (
+              <>
+                <span className="flex items-center gap-1.5">
+                  <kbd className="px-2 py-1 bg-sage-green/30 rounded text-charcoal/70 font-mono text-xs shadow-sm">K</kbd>
+                  <span>Known</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <kbd className="px-2 py-1 bg-terracotta/30 rounded text-charcoal/70 font-mono text-xs shadow-sm">R</kbd>
+                  <span>Review</span>
+                </span>
+              </>
+            )}
           </p>
         </div>
       </div>

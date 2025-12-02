@@ -1,8 +1,5 @@
 'use client';
 
-/* eslint-disable react-hooks/set-state-in-effect */
-// This file uses setState in effects for event bus subscription pattern (external event handling)
-
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useStudyForge } from '@/components/providers/StudyForgeProvider';
