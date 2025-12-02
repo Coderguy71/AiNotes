@@ -13,6 +13,7 @@ import {
   saveFlashcardSet 
 } from "@/lib/db";
 import { awardXP } from "@/lib/studyForge";
+import { useStudyForge } from "@/components/providers/StudyForgeProvider";
 
 interface ToastMessage {
   id: string;
@@ -23,6 +24,7 @@ interface ToastMessage {
 
 export default function FlashcardViewerPage() {
   const params = useParams();
+  const { state: studyForgeState } = useStudyForge();
   const [flashcardSet, setFlashcardSet] = useState<FlashcardSet | null>(null);
   const [relatedNote, setRelatedNote] = useState<NoteRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +35,10 @@ export default function FlashcardViewerPage() {
   const [saving, setSaving] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [xpEarnedThisSession, setXpEarnedThisSession] = useState(0);
+  const [cardsReviewedThisSession, setCardsReviewedThisSession] = useState<Set<number>>(new Set());
+  const [showSettings, setShowSettings] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Get ID from params
   const id = params.id as string;
@@ -45,6 +51,61 @@ export default function FlashcardViewerPage() {
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== toastId));
     }, 3000);
+  };
+
+  // Initialize audio for XP sounds
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Create a silent audio element as placeholder
+      // In production, this should load from /sfx/xp-chime.mp3
+      audioRef.current = new Audio();
+      // audioRef.current.src = '/sfx/xp-chime.mp3';
+      audioRef.current.volume = 0.3;
+    }
+  }, []);
+
+  // Play XP sound
+  const playXPSound = () => {
+    if (!audioRef.current || !studyForgeState?.settings.soundEnabled) return;
+    
+    // Check for prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+    
+    try {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(err => {
+        console.warn('Failed to play XP sound:', err);
+      });
+    } catch (err) {
+      console.warn('XP sound error:', err);
+    }
+  };
+
+  // Handle marking card as known
+  const handleMarkKnown = async (cardIndex: number) => {
+    if (cardsReviewedThisSession.has(cardIndex)) return;
+    
+    try {
+      // Award XP for reviewing the card
+      await awardXP(10, 'Review flashcard', 'review_flashcards');
+      
+      // Update session tracking
+      setXpEarnedThisSession(prev => prev + 10);
+      setCardsReviewedThisSession(prev => new Set(prev).add(cardIndex));
+      
+      // Play sound effect
+      playXPSound();
+      
+    } catch (err) {
+      console.error('Failed to award XP for card review:', err);
+    }
+  };
+
+  // Handle marking card for review
+  const handleMarkReview = (cardIndex: number) => {
+    // No XP awarded, just tracking for potential future features
+    console.log('Card marked for review:', cardIndex);
   };
 
   // Load flashcard set and related note
@@ -466,6 +527,31 @@ export default function FlashcardViewerPage() {
                 </div>
               </div>
 
+              {/* Session XP Stats */}
+              <div className="pt-4 border-t border-charcoal/10">
+                <h4 className="text-sm font-medium text-charcoal/60 mb-2 uppercase tracking-wide">
+                  Session Progress
+                </h4>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-[--radius-sm] bg-gradient-to-r from-sage-green/20 to-soft-pink/20 border border-sage-green/30">
+                    <svg className="h-5 w-5 text-sage-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    <span className="text-sm font-bold text-charcoal">
+                      +{xpEarnedThisSession} XP
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-[--radius-sm] bg-almond-silk/50">
+                    <svg className="h-5 w-5 text-dusty-mauve" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-sm font-medium text-charcoal">
+                      {cardsReviewedThisSession.size}/{flashcardSet.cards.length} reviewed
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Related Note */}
               {relatedNote && (
                 <div className="pt-4 border-t border-charcoal/10">
@@ -481,9 +567,47 @@ export default function FlashcardViewerPage() {
 
             {/* Right: Action Buttons */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-charcoal/60 mb-3 uppercase tracking-wide">
-                Actions
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-charcoal/60 uppercase tracking-wide">
+                  Actions
+                </h3>
+                <button
+                  onClick={() => setShowSettings(!showSettings)}
+                  className="p-2 rounded-[--radius-sm] hover:bg-almond-silk/50 transition-colors"
+                  aria-label="Toggle settings"
+                >
+                  <svg className="h-5 w-5 text-charcoal/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Settings Panel */}
+              {showSettings && studyForgeState && (
+                <div className="mb-4 p-4 rounded-[--radius-default] bg-almond-silk/30 border border-charcoal/10 space-y-3 animate-slide-in-down">
+                  <h4 className="text-xs font-medium text-charcoal/70 uppercase tracking-wide">
+                    Review Settings
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal/80">XP Sounds</span>
+                      <span className={`px-2 py-1 rounded-[--radius-sm] text-xs font-medium ${studyForgeState.settings.soundEnabled ? 'bg-sage-green/20 text-sage-green' : 'bg-charcoal/10 text-charcoal/60'}`}>
+                        {studyForgeState.settings.soundEnabled ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal/80">Animations</span>
+                      <span className={`px-2 py-1 rounded-[--radius-sm] text-xs font-medium ${studyForgeState.settings.notificationsEnabled ? 'bg-sage-green/20 text-sage-green' : 'bg-charcoal/10 text-charcoal/60'}`}>
+                        {studyForgeState.settings.notificationsEnabled ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-charcoal/60 italic pt-2 border-t border-charcoal/10">
+                      Manage settings in <Link href="/studyforge" className="text-dusty-mauve hover:underline">StudyForge</Link>
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Save Set Button */}
               <button
@@ -571,8 +695,12 @@ export default function FlashcardViewerPage() {
         <div ref={contentRef} className="animate-stagger-2">
           <FlashcardCarousel
             cards={flashcardSet.cards}
+            showMasteryControls={true}
+            onMarkKnown={handleMarkKnown}
+            onMarkReview={handleMarkReview}
+            enableAnimations={studyForgeState?.settings.notificationsEnabled ?? true}
             onComplete={() => {
-              addToast("Great job! You've reviewed all cards.", "success", (
+              addToast(`Great job! You've reviewed all cards. (+${xpEarnedThisSession} XP this session)`, "success", (
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
