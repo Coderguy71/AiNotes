@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getNotes, deleteNote, saveFlashcardSet, NoteRecord } from "@/lib/db";
+import { awardXP } from "@/lib/studyForge";
+import StudyForgeNavLink from "@/components/StudyForgeNavLink";
 import {
   PieChart,
   Pie,
@@ -108,6 +110,13 @@ export default function Dashboard() {
         throw new Error("No flashcards were generated");
       }
 
+      // Award XP for generating flashcards
+      try {
+        await awardXP(40, 'Generate flashcards', 'generate_flashcards');
+      } catch (xpError) {
+        console.error('Failed to award XP for generation:', xpError);
+      }
+
       // Save the flashcard set to the database with note metadata
       const flashcardSetId = await saveFlashcardSet({
         noteId: note.id,
@@ -122,9 +131,16 @@ export default function Dashboard() {
         throw new Error("Failed to save flashcard set");
       }
 
+      // Award XP for saving flashcards
+      try {
+        await awardXP(25, 'Save flashcards');
+      } catch (xpError) {
+        console.error('Failed to award XP for saving:', xpError);
+      }
+
       // Show success toast
       addToast(
-        `Generated ${data.cards.length} flashcards!`,
+        `Generated ${data.cards.length} flashcards! (+65 XP)`,
         "success",
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -815,13 +831,7 @@ function Header() {
               </svg>
               <span className="hidden sm:inline">Flashcards</span>
             </Link>
-            <Link
-              href="/studyforge"
-              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-charcoal hover:text-dusty-mauve rounded-[--radius-default] hover:bg-dusty-mauve/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-dusty-mauve/50 min-h-[40px] touch-manipulation"
-            >
-              <span className="text-base">⚡</span>
-              <span className="hidden sm:inline">StudyForge</span>
-            </Link>
+            <StudyForgeNavLink />
             <Link
               href="/"
               className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-charcoal hover:text-sage-green rounded-[--radius-default] hover:bg-sage-green/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green/50 min-h-[40px] touch-manipulation"

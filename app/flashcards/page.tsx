@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { listFlashcardSets, deleteFlashcardSet, FlashcardSet } from "@/lib/db";
+import StudyForgeNavLink from "@/components/StudyForgeNavLink";
 
 interface ToastMessage {
   id: string;
@@ -135,6 +136,7 @@ export default function FlashcardsListPage() {
                 </svg>
                 <span className="hidden sm:inline">Home</span>
               </Link>
+              <StudyForgeNavLink />
               <Link
                 href="/dashboard"
                 className="inline-flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-sm font-medium bg-gradient-to-br from-dusty-mauve to-dusty-mauve/90 text-cream rounded-[--radius-default] shadow-[--shadow-sm] hover:shadow-[--shadow-md] hover:scale-105 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-dusty-mauve/50 min-h-[40px] touch-manipulation"

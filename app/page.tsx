@@ -5,8 +5,11 @@ import Link from "next/link";
 import InputCard from "@/components/InputCard";
 import OutputCard from "@/components/OutputCard";
 import SmartStructureCard from "@/components/SmartStructureCard";
+import StudyForgeNavLink from "@/components/StudyForgeNavLink";
+import XPFloatingBadge from "@/components/XPFloatingBadge";
 import { generateNotes } from "./actions/generateNotes";
 import { ClassificationResult } from "@/lib/prompts/classifierPrompt";
+import { awardXP } from "@/lib/studyForge";
 
 export default function Home() {
   const [output, setOutput] = useState("");
@@ -20,6 +23,9 @@ export default function Home() {
   const [classification, setClassification] = useState<ClassificationResult | null>(null);
   const [classificationLoading, setClassificationLoading] = useState(false);
   const [classificationError, setClassificationError] = useState<string | null>(null);
+
+  // XP state
+  const [showTransformXP, setShowTransformXP] = useState(false);
 
   const classifyNotes = async (rawText: string, transformedText: string) => {
     setClassificationLoading(true);
@@ -57,6 +63,7 @@ export default function Home() {
     setOutput("");
     setIsLoading(true);
     setRawInput(input);
+    setShowTransformXP(false);
     
     // Reset classification state
     setClassification(null);
@@ -68,6 +75,16 @@ export default function Home() {
       
       if (result.success && result.output) {
         setOutput(result.output);
+        
+        // Award XP for transforming notes
+        try {
+          await awardXP(15, 'Transform notes', 'create_notes');
+          setShowTransformXP(true);
+          // Hide badge after 3 seconds
+          setTimeout(() => setShowTransformXP(false), 3000);
+        } catch (xpError) {
+          console.error('Failed to award XP:', xpError);
+        }
         
         // Trigger classification in the background (non-blocking)
         classifyNotes(input, result.output);
@@ -112,13 +129,7 @@ export default function Home() {
                 </svg>
                 <span className="hidden sm:inline">Flashcards</span>
               </Link>
-              <Link
-                href="/studyforge"
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-charcoal hover:text-sage-green rounded-[--radius-default] hover:bg-sage-green/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green/50 min-h-[40px] touch-manipulation"
-              >
-                <span className="text-base">⚡</span>
-                <span className="hidden sm:inline">StudyForge</span>
-              </Link>
+              <StudyForgeNavLink />
               <Link
                 href="/dashboard"
                 className="inline-flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-sm font-medium bg-gradient-to-br from-dusty-mauve to-dusty-mauve/90 text-cream rounded-[--radius-default] shadow-[--shadow-sm] hover:shadow-[--shadow-md] hover:scale-105 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-dusty-mauve/50 min-h-[40px] touch-manipulation"
@@ -151,12 +162,19 @@ export default function Home() {
           </section>
 
           <section ref={outputRef} className="animate-stagger-3" style={{ animationDelay: "0.2s" }}>
-            <OutputCard 
-              output={output} 
-              format={format} 
-              isLoading={isLoading} 
-              onFormatChange={setFormat}
-            />
+            <div className="relative">
+              <OutputCard 
+                output={output} 
+                format={format} 
+                isLoading={isLoading} 
+                onFormatChange={setFormat}
+              />
+              {output && showTransformXP && (
+                <div className="absolute top-4 right-4 z-10">
+                  <XPFloatingBadge amount={15} visible={showTransformXP} />
+                </div>
+              )}
+            </div>
           </section>
 
           {/* Smart Structure Card - rendered beneath OutputCard */}

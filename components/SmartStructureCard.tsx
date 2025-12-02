@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClassificationResult } from "@/lib/prompts/classifierPrompt";
 import { saveNote } from "@/lib/db";
+import { awardXP } from "@/lib/studyForge";
+import XPFloatingBadge from "@/components/XPFloatingBadge";
 
 interface SmartStructureCardProps {
   classification: ClassificationResult | null;
@@ -30,6 +32,7 @@ export default function SmartStructureCard({
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [showSaveXP, setShowSaveXP] = useState(false);
 
   const addToast = (message: string, type: "success" | "error") => {
     const id = Date.now().toString();
@@ -57,6 +60,16 @@ export default function SmartStructureCard({
       if (noteId !== null) {
         setIsSaved(true);
         addToast("Note saved to history successfully!", "success");
+        
+        // Award XP for saving note
+        try {
+          await awardXP(50, 'Add note', 'create_notes');
+          setShowSaveXP(true);
+          // Hide badge after 3 seconds
+          setTimeout(() => setShowSaveXP(false), 3000);
+        } catch (xpError) {
+          console.error('Failed to award XP:', xpError);
+        }
       } else {
         addToast("Failed to save note (SSR environment)", "error");
       }
@@ -323,15 +336,16 @@ export default function SmartStructureCard({
 
                   {/* Save to History Button */}
                   <div className="pt-4 border-t border-charcoal/10">
-                    <button
-                      onClick={handleSaveToHistory}
-                      disabled={isSaving || isSaved}
-                      className={`group relative w-full sm:w-auto flex items-center justify-center gap-2 rounded-[--radius-default] px-6 py-3.5 font-medium shadow-[--shadow-md] transition-all duration-[--animate-duration-fast] min-h-[48px] touch-manipulation focus:outline-none focus:ring-2 ${
-                        isSaved
-                          ? "bg-sage-green/20 text-sage-green border-2 border-sage-green/30 cursor-default"
-                          : "bg-gradient-to-br from-dusty-mauve to-dusty-mauve/80 text-cream hover:scale-105 hover:shadow-[--shadow-lg] hover:-translate-y-0.5 active:scale-95 focus:ring-dusty-mauve/50"
-                      } ${isSaving ? "opacity-70 cursor-wait" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <button
+                        onClick={handleSaveToHistory}
+                        disabled={isSaving || isSaved}
+                        className={`group relative flex items-center justify-center gap-2 rounded-[--radius-default] px-6 py-3.5 font-medium shadow-[--shadow-md] transition-all duration-[--animate-duration-fast] min-h-[48px] touch-manipulation focus:outline-none focus:ring-2 ${
+                          isSaved
+                            ? "bg-sage-green/20 text-sage-green border-2 border-sage-green/30 cursor-default"
+                            : "bg-gradient-to-br from-dusty-mauve to-dusty-mauve/80 text-cream hover:scale-105 hover:shadow-[--shadow-lg] hover:-translate-y-0.5 active:scale-95 focus:ring-dusty-mauve/50"
+                        } ${isSaving ? "opacity-70 cursor-wait" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
                       {isSaving ? (
                         <>
                           <svg
@@ -391,7 +405,11 @@ export default function SmartStructureCard({
                           Save to History
                         </>
                       )}
-                    </button>
+                      </button>
+                      {isSaved && showSaveXP && (
+                        <XPFloatingBadge amount={50} visible={showSaveXP} />
+                      )}
+                    </div>
                     {isSaved && (
                       <p className="mt-2 text-xs text-sage-green animate-fade-in">
                         ✓ This note has been saved and can be viewed in your history

@@ -12,6 +12,7 @@ import {
   NoteRecord,
   saveFlashcardSet 
 } from "@/lib/db";
+import { awardXP } from "@/lib/studyForge";
 
 interface ToastMessage {
   id: string;
@@ -119,7 +120,15 @@ export default function FlashcardViewerPage() {
 
       if (newId) {
         setFlashcardSet({ ...flashcardSet, id: newId });
-        addToast("Flashcard set saved successfully!", "success", (
+        
+        // Award XP for saving flashcards
+        try {
+          await awardXP(25, 'Save flashcards');
+        } catch (xpError) {
+          console.error('Failed to award XP:', xpError);
+        }
+        
+        addToast("Flashcard set saved successfully! (+25 XP)", "success", (
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
