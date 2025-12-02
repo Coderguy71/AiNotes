@@ -3,7 +3,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 // This file uses setState in effects for event bus subscription pattern (external event handling)
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStudyForge } from '@/components/providers/StudyForgeProvider';
 import type { StudyForgeEvent } from '@/lib/studyForge';
@@ -12,6 +12,12 @@ interface Toast {
   id: string;
   event: StudyForgeEvent;
   timestamp: number;
+}
+
+// Hook to get toasts from context
+function useXPToasts() {
+  const { toasts } = useStudyForge();
+  return toasts || [];
 }
 
 export function XPToastHost() {
@@ -32,14 +38,15 @@ export function XPToastHost() {
       {toasts.map((toast, index) => (
         <XPToastItem
           key={toast.id}
-          toast={toast}
-          index={index}
+          event={toast.event}
+          style={{ animationDelay: `${index * 50}ms` }}
         />
       ))}
     </div>,
     document.body
   );
 }
+
 interface XPToastItemProps {
   event: StudyForgeEvent;
   style?: React.CSSProperties;
