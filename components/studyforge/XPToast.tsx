@@ -15,54 +15,31 @@ interface Toast {
 }
 
 export function XPToastHost() {
-  const { events, state } = useStudyForge();
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const lastEventIndexRef = useRef(0);
+  const toasts = useXPToasts();
+  const [mounted, setMounted] = useState(false);
 
-  // Track the last processed event to avoid duplicates
+  // Only render portal on client side
   useEffect(() => {
-    if (events.length === 0 || events.length <= lastEventIndexRef.current) return;
-    if (!state?.settings.notificationsEnabled) return;
+    setMounted(true);
+  }, []);
 
-    const latestEvent = events[events.length - 1];
-    lastEventIndexRef.current = events.length;
-    
-    // Only show toasts for XP events and level ups
-    if (latestEvent.type === 'xpAwarded' || latestEvent.type === 'levelUp') {
-      const newToast: Toast = {
-        id: `${Date.now()}-${Math.random()}`,
-        event: latestEvent,
-        timestamp: Date.now(),
-      };
-
-      // Add new toast
-      setToasts((prevToasts) => [...prevToasts, newToast]);
-
-      // Auto-remove after 3 seconds
-      const timeoutId = setTimeout(() => {
-        setToasts((prevToasts) => prevToasts.filter((t) => t.id !== newToast.id));
-      }, 3000);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [events, state?.settings.notificationsEnabled]);
-
-  if (typeof window === 'undefined') return null;
+  if (!mounted) {
+    return null;
+  }
 
   return createPortal(
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
       {toasts.map((toast, index) => (
         <XPToastItem
           key={toast.id}
-          event={toast.event}
-          style={{ animationDelay: `${index * 100}ms` }}
+          toast={toast}
+          index={index}
         />
       ))}
     </div>,
     document.body
   );
 }
-
 interface XPToastItemProps {
   event: StudyForgeEvent;
   style?: React.CSSProperties;
