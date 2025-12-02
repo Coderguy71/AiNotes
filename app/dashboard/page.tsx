@@ -816,6 +816,13 @@ function Header() {
               <span className="hidden sm:inline">Flashcards</span>
             </Link>
             <Link
+              href="/studyforge"
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-charcoal hover:text-dusty-mauve rounded-[--radius-default] hover:bg-dusty-mauve/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-dusty-mauve/50 min-h-[40px] touch-manipulation"
+            >
+              <span className="text-base">⚡</span>
+              <span className="hidden sm:inline">StudyForge</span>
+            </Link>
+            <Link
               href="/"
               className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-charcoal hover:text-sage-green rounded-[--radius-default] hover:bg-sage-green/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green/50 min-h-[40px] touch-manipulation"
             >

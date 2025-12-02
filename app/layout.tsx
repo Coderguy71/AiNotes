@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import PageTransition from "@/components/PageTransition";
+import { StudyForgeProvider } from "@/components/providers/StudyForgeProvider";
+import { XPToastHost } from "@/components/studyforge/XPToast";
+import { LevelUpModal } from "@/components/studyforge/LevelUpModal";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -37,9 +40,13 @@ export default function RootLayout({
         <div className="accent-line" style={{ top: "20%", width: "60%", left: "20%" }} />
         <div className="accent-line" style={{ top: "60%", width: "50%", right: "10%" }} />
         
-        <PageTransition>
-          {children}
-        </PageTransition>
+        <StudyForgeProvider>
+          <PageTransition>
+            {children}
+          </PageTransition>
+          <XPToastHost />
+          <LevelUpModal />
+        </StudyForgeProvider>
       </body>
     </html>
   );
